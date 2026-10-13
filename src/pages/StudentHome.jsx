@@ -9,6 +9,7 @@ import ShieldProfile from '@/components/ShieldProfile';
 import ProgressBar from '@/components/ProgressBar';
 import { characters } from '@/data/characters';
 import { readActivities, computeStreak, weekTrained } from '@/lib/activity';
+import { reactionCounts, bumpReaction } from '@/lib/reactions';
 
 // Recência fictícia por enquanto — vira real quando houver registro de treino.
 const recency = { nicole: 'há 3 h', thiago: 'há 1 dia', felipe: 'há 6 h', ciclano: 'há 5 dias' };
@@ -50,7 +51,7 @@ const WeekStrip = ({ days = [] }) => {
   );
 };
 
-const ReactionRow = ({ onReact }) => (
+const ReactionRow = ({ onReact, counts }) => (
   <div className="flex gap-2 mt-3">
     {REACTIONS.map((r) => (
       <button
@@ -60,6 +61,7 @@ const ReactionRow = ({ onReact }) => (
       >
         <r.icon className={`w-4 h-4 ${r.color}`} />
         {r.label}
+        {counts && <span className="text-xs text-gray-400">{counts[r.id] ?? 0}</span>}
       </button>
     ))}
   </div>
@@ -106,7 +108,10 @@ const StudentHome = () => {
     force((n) => n + 1);
   };
 
-  const sendQuick = (friend, item) => sendTo(friend.id, friend.name, item);
+  const sendQuick = (friend, item) => {
+    bumpReaction(friend.id, item);
+    sendTo(friend.id, friend.name, item);
+  };
 
   // Resolve o id de quem mandou (notifs novas trazem fromId; antigas, pelo nome).
   const senderIdOf = (n) =>
@@ -255,7 +260,7 @@ const StudentHome = () => {
                     <WeekStrip days={f.week} />
                   </div>
                 </div>
-                <ReactionRow onReact={(item) => sendQuick(f, item)} />
+                <ReactionRow counts={reactionCounts(f)} onReact={(item) => sendQuick(f, item)} />
               </div>
             ))}
           </div>
@@ -281,7 +286,7 @@ const StudentHome = () => {
                   <WeekStrip days={f.week} />
                 </div>
               </div>
-              <ReactionRow onReact={(item) => sendQuick(f, item)} />
+              <ReactionRow counts={reactionCounts(f)} onReact={(item) => sendQuick(f, item)} />
             </div>
           ))}
         </div>

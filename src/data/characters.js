@@ -21,6 +21,7 @@ export const characters = [
     emblem: 'grapple',
     streak: 42,
     week: [true, true, true, true, true, true, true],
+    reactions: { Fogo: 12, 'Força': 5, Cutucar: 2 },
     activity: { headline: 'Determinado', detail: '4 dias na semana com check-in' }
   },
   {
@@ -41,6 +42,7 @@ export const characters = [
     emblem: 'grapple',
     streak: 12,
     week: [false, true, true, false, true, true, false],
+    reactions: { Fogo: 7, 'Força': 3, Cutucar: 1 },
     activity: { headline: 'Eclético', detail: '3 modalidades diferentes este mês' }
   },
   {
@@ -61,6 +63,7 @@ export const characters = [
     emblem: 'run',
     streak: 23,
     week: [true, true, false, true, true, true, true],
+    reactions: { Fogo: 9, 'Força': 4, Cutucar: 0 },
     activity: { headline: '50 km', detail: 'percorridos este mês' }
   },
   {
@@ -81,6 +84,7 @@ export const characters = [
     emblem: 'lift',
     streak: 0,
     week: [false, true, false, false, false, false, false],
+    reactions: { Fogo: 1, 'Força': 0, Cutucar: 3 },
     activity: { headline: 'Inativo', detail: 'sem treinos recentes', inactive: true }
   }
 ];

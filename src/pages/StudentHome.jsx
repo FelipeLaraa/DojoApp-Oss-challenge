@@ -82,10 +82,11 @@ const StudentHome = () => {
       >
         {/* Header com perfil */}
         <div className="text-center">
-          <ShieldProfile 
-            type="black"
+          <ShieldProfile
+            type={user?.frame || 'black'}
             years={user?.years || 1}
             size="large"
+            photo={user?.photo}
           />
           <h2 className="text-xl font-bold mt-4">Olá, {user?.name}!</h2>
           <p className="text-gray-300">Faixa {user?.belt} • {user?.weight}kg</p>

@@ -45,6 +45,10 @@ export const AuthProvider = ({ children }) => {
     const newUser = { ...user, ...updatedFields };
     setUser(newUser);
     localStorage.setItem('dojoUser', JSON.stringify(newUser));
+    // Memória permanente por perfil: sobrevive a logout e troca de perfil.
+    if (newUser.id) {
+      localStorage.setItem(`dojoProfile_${newUser.id}`, JSON.stringify(newUser));
+    }
   };
 
   const value = {

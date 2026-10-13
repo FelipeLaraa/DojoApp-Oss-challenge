@@ -22,7 +22,9 @@ const Login = () => {
   ];
 
   const handleCharacterLogin = (character) => {
-    const userData = {
+    // Se esse perfil já foi editado antes, carrega o que foi salvo (foto, etc.).
+    const saved = localStorage.getItem(`dojoProfile_${character.id}`);
+    const userData = saved ? JSON.parse(saved) : {
       id: character.id,
       name: character.name,
       email: `${character.id}@dojo.app`,

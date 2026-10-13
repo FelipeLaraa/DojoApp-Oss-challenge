@@ -11,7 +11,9 @@ const Profile = () => {
   const { user, userType, logout, updateUser } = useAuth();
   const [selectedFrame, setSelectedFrame] = useState(user?.frame || 'black');
   const [name, setName] = useState(user?.name || '');
-  const [email, setEmail] = useState(user?.email || '');
+  const [username, setUsername] = useState(user?.username || '');
+  const [bio, setBio] = useState(user?.bio || '');
+  const [mainSport, setMainSport] = useState(user?.mainSport || 'BJJ');
   const [weight, setWeight] = useState(user?.weight || '');
   const [height, setHeight] = useState(user?.height || '');
   const [belt, setBelt] = useState(user?.belt || 'Branca');
@@ -22,7 +24,9 @@ const Profile = () => {
     if (!user) return;
     setSelectedFrame(user.frame || 'black');
     setName(user.name || '');
-    setEmail(user.email || '');
+    setUsername(user.username || '');
+    setBio(user.bio || '');
+    setMainSport(user.mainSport || 'BJJ');
     setWeight(user.weight || '');
     setHeight(user.height || '');
     setBelt(user.belt || 'Branca');
@@ -46,10 +50,12 @@ const Profile = () => {
   };
 
   const frameTypes = [
-    { id: 'black', label: 'Preta Brilhante', description: 'Clássica e elegante' },
-    { id: 'coral', label: 'Coral Brilhante', description: 'Vibrante e energética' },
-    { id: 'white', label: 'Branca Clássica', description: 'Limpa e minimalista' }
+    { id: 'black', label: 'Obsidiana', description: 'Preta com metal dourado' },
+    { id: 'coral', label: 'Chama', description: 'Coral vibrante e quente' },
+    { id: 'white', label: 'Prata', description: 'Branca limpa e metálica' }
   ];
+
+  const SPORTS = ['BJJ', 'Wrestling', 'Corrida', 'Musculação', 'Boxe', 'Luta livre'];
 
   const stats = {
     student: [
@@ -81,9 +87,12 @@ const Profile = () => {
   };
 
   const handleSaveProfile = () => {
+    const cleanUsername = username.replace(/^@+/, '').trim();
     updateUser({
       name,
-      email,
+      username: cleanUsername,
+      bio,
+      mainSport,
       photo,
       frame: selectedFrame,
       ...(userType === 'student' && {
@@ -131,11 +140,11 @@ const Profile = () => {
             </label>
           </div>
           <h2 className="text-xl font-bold mt-2">{name}</h2>
-          {userType === 'student' && (
-            <p className="text-gray-300">
-              Faixa {user?.belt} • {user?.weight}kg • {user?.height}cm
-            </p>
-          )}
+          {username && <p className="text-red-400 text-sm">@{username}</p>}
+          <p className="text-gray-300 text-sm mt-1">
+            {mainSport}{belt ? ` • Faixa ${belt}` : ''}
+          </p>
+          {bio && <p className="text-gray-300 text-sm mt-2 max-w-xs mx-auto">{bio}</p>}
         </div>
 
         {/* Frame Selection */}
@@ -214,15 +223,46 @@ const Profile = () => {
             </div>
             
             <div>
-              <label className="block text-sm font-medium mb-1">Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+              <label className="block text-sm font-medium mb-1">Usuário</label>
+              <div className="flex items-center rounded-lg bg-gray-800 border border-gray-600 focus-within:border-red-500">
+                <span className="pl-3 text-gray-400 text-sm">@</span>
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value.replace(/\s/g, '').toLowerCase())}
+                  placeholder="seunome"
+                  className="w-full p-2 bg-transparent focus:outline-none text-sm"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Modalidade principal</label>
+              <select
+                value={mainSport}
+                onChange={(e) => setMainSport(e.target.value)}
                 className="w-full p-2 rounded-lg bg-gray-800 border border-gray-600 focus:border-red-500 focus:outline-none text-sm"
+              >
+                {SPORTS.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Biografia <span className="text-gray-500">({bio.length}/150)</span>
+              </label>
+              <textarea
+                value={bio}
+                maxLength={150}
+                rows={3}
+                onChange={(e) => setBio(e.target.value)}
+                placeholder="Conte quem você é no tatame (emoji liberado)"
+                className="w-full p-2 rounded-lg bg-gray-800 border border-gray-600 focus:border-red-500 focus:outline-none text-sm resize-none"
               />
             </div>
-            
+
             {userType === 'student' && (
               <>
                 <div className="grid grid-cols-2 gap-3">

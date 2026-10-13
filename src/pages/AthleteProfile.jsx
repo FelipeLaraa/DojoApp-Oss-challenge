@@ -53,8 +53,11 @@ const AthleteProfile = () => {
         <div className="text-center">
           <ShieldProfile type={athlete.frame} years={athlete.years} size="large" photo={athlete.photo} />
           <h1 className="text-2xl font-bold mt-4">{athlete.name}</h1>
-          <p className="text-gray-400">{athlete.roleLabel}</p>
-          <p className="text-gray-300 mt-1">Faixa {athlete.belt}</p>
+          {athlete.username && <p className="text-red-400 text-sm">@{athlete.username}</p>}
+          <p className="text-gray-400 mt-1">{athlete.roleLabel}</p>
+          <p className="text-gray-300 text-sm">
+            {athlete.mainSport || athlete.modality}{athlete.belt ? ` • Faixa ${athlete.belt}` : ''}
+          </p>
         </div>
 
         {/* Status de atividade */}

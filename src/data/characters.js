@@ -5,6 +5,8 @@
 export const characters = [
   {
     id: 'felipe',
+    username: 'felipe',
+    mainSport: 'BJJ',
     name: 'Felipe',
     role: 'veteran',
     roleLabel: 'O Veterano',
@@ -20,6 +22,8 @@ export const characters = [
   },
   {
     id: 'thiago',
+    username: 'thiago',
+    mainSport: 'Wrestling',
     name: 'Thiago',
     role: 'prodigy',
     roleLabel: 'O Prodígio',
@@ -35,6 +39,8 @@ export const characters = [
   },
   {
     id: 'nicole',
+    username: 'nicole',
+    mainSport: 'Corrida',
     name: 'Nicole',
     role: 'strategist',
     roleLabel: 'A Estrategista',
@@ -50,6 +56,8 @@ export const characters = [
   },
   {
     id: 'ciclano',
+    username: 'ciclano',
+    mainSport: 'Musculação',
     name: 'Ciclano',
     role: 'beginner',
     roleLabel: 'O Iniciante',

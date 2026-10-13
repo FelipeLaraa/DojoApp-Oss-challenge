@@ -18,6 +18,8 @@ export const characters = [
     weight: 84,
     height: 180,
     bio: 'O mestre do dojo. Calmo porque não precisa provar nada.',
+    emblem: 'grapple',
+    streak: 42,
     activity: { headline: 'Determinado', detail: '4 dias na semana com check-in' }
   },
   {
@@ -35,6 +37,8 @@ export const characters = [
     weight: 72,
     height: 176,
     bio: 'Jovem talento subindo rápido. Vence no instinto.',
+    emblem: 'grapple',
+    streak: 12,
     activity: { headline: 'Eclético', detail: '3 modalidades diferentes este mês' }
   },
   {
@@ -52,6 +56,8 @@ export const characters = [
     weight: 63,
     height: 168,
     bio: 'A mente técnica. Não é a mais forte, é a que lê o jogo.',
+    emblem: 'run',
+    streak: 23,
     activity: { headline: '50 km', detail: 'percorridos este mês' }
   },
   {
@@ -69,6 +75,8 @@ export const characters = [
     weight: 78,
     height: 175,
     bio: 'Começando do zero, com garra e fome de evoluir.',
+    emblem: 'lift',
+    streak: 0,
     activity: { headline: 'Inativo', detail: 'sem treinos recentes', inactive: true }
   }
 ];

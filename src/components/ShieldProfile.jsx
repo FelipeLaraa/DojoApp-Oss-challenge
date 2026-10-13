@@ -31,7 +31,17 @@ const emblems = {
   )
 };
 
-const ShieldProfile = ({ type = 'black', years = 1, size = 'medium', photo = null }) => {
+// Cor do selo "hit" (sequência) por faixa: cinza → laranja → vermelho → roxo.
+export const hitColor = (hit) => {
+  if (hit >= 30) return '#a855f7';
+  if (hit >= 7) return '#ef4444';
+  if (hit >= 1) return '#fb923c';
+  return '#4b5563';
+};
+
+// type   = moldura (cor/estilo). emblem = selo de esporte (independente da moldura).
+// hit    = sequência de treinos; mostra o selo colorido. null/undefined = sem selo.
+const ShieldProfile = ({ type = 'black', hit = null, size = 'medium', photo = null, emblem }) => {
   const sizeClasses = {
     small: 'w-12 h-12',
     medium: 'w-20 h-20',
@@ -48,10 +58,10 @@ const ShieldProfile = ({ type = 'black', years = 1, size = 'medium', photo = nul
     run: 'shield-run'
   };
 
-  const yearsBadgeSize = {
-    small: 'text-xs px-2 py-1',
+  const hitBadgeSize = {
+    small: 'text-xs px-2 py-0.5',
     medium: 'text-sm px-3 py-1',
-    large: 'text-base px-4 py-2'
+    large: 'text-base px-4 py-1.5'
   };
 
   const emblemSize = {
@@ -60,7 +70,11 @@ const ShieldProfile = ({ type = 'black', years = 1, size = 'medium', photo = nul
     large: 'w-9 h-9 p-1.5'
   };
 
-  const emblem = emblems[type];
+  // Se emblem foi passado (inclusive null para "nenhum"), ele manda. Caso
+  // contrário, cai no comportamento antigo (emblema derivado da moldura).
+  const emblemKey = emblem !== undefined ? emblem : type;
+  const emblemSvg = emblemKey ? emblems[emblemKey] : null;
+  const showHit = hit !== null && hit !== undefined;
 
   return (
     <div className="relative inline-block">
@@ -72,15 +86,17 @@ const ShieldProfile = ({ type = 'black', years = 1, size = 'medium', photo = nul
         )}
       </div>
 
-      {emblem && (
+      {emblemSvg && (
         <div className={`emblem-badge ${emblemSize[size]}`}>
-          {emblem}
+          {emblemSvg}
         </div>
       )}
 
-      <div className={`years-badge ${yearsBadgeSize[size]}`}>
-        {years}
-      </div>
+      {showHit && (
+        <div className={`years-badge ${hitBadgeSize[size]}`} style={{ backgroundColor: hitColor(hit) }}>
+          {hit}
+        </div>
+      )}
     </div>
   );
 };

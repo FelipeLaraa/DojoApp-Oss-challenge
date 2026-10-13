@@ -1,11 +1,44 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
-import { Edit, Trophy, Calendar, Star, LogOut } from 'lucide-react';
+import { Edit, Trophy, Calendar, Star, LogOut, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 import ShieldProfile from '@/components/ShieldProfile';
 import ProgressBar from '@/components/ProgressBar';
+import { readActivities, computeStreak } from '@/lib/activity';
+
+// Molduras disponíveis (cor/estilo) com raridade, mostradas em lista compacta.
+const MOLDURAS = [
+  { id: 'white', label: 'Pérola', rarity: 'Comum' },
+  { id: 'coral', label: 'Coral', rarity: 'Comum' },
+  { id: 'run', label: 'Verde', rarity: 'Rara' },
+  { id: 'swim', label: 'Azul', rarity: 'Rara' },
+  { id: 'lift', label: 'Aço', rarity: 'Épica' },
+  { id: 'grapple', label: 'Ouro', rarity: 'Épica' },
+  { id: 'black', label: 'Obsidiana', rarity: 'Lendária' }
+];
+
+// Selos de esporte (emblema do canto), independentes da moldura.
+const SELOS = [
+  { id: null, label: 'Nenhum' },
+  { id: 'grapple', label: 'Luta' },
+  { id: 'lift', label: 'Levantamento' },
+  { id: 'run', label: 'Corrida' },
+  { id: 'swim', label: 'Natação' }
+];
+
+const RARITY_COLOR = {
+  'Comum': '#9ca3af',
+  'Rara': '#60a5fa',
+  'Épica': '#a855f7',
+  'Lendária': '#f59e0b'
+};
+
+// Molduras que, no modelo antigo, também carregavam o emblema do esporte.
+const SPORT_FRAMES = ['swim', 'lift', 'grapple', 'run'];
+const initialEmblemFor = (u) =>
+  u?.emblem !== undefined ? u.emblem : (SPORT_FRAMES.includes(u?.frame) ? u.frame : null);
 
 const Profile = () => {
   const { user, userType, logout, updateUser } = useAuth();
@@ -18,11 +51,16 @@ const Profile = () => {
   const [height, setHeight] = useState(user?.height || '');
   const [belt, setBelt] = useState(user?.belt || 'Branca');
   const [photo, setPhoto] = useState(user?.photo || null);
+  const [selectedEmblem, setSelectedEmblem] = useState(() => initialEmblemFor(user));
+  const [showFrames, setShowFrames] = useState(false);
+
+  const myStreak = computeStreak(readActivities(user?.id));
 
   // Re-sincroniza os campos quando o usuário carrega do armazenamento.
   useEffect(() => {
     if (!user) return;
     setSelectedFrame(user.frame || 'black');
+    setSelectedEmblem(initialEmblemFor(user));
     setName(user.name || '');
     setUsername(user.username || '');
     setBio(user.bio || '');
@@ -48,13 +86,6 @@ const Profile = () => {
     reader.onload = () => setPhoto(reader.result);
     reader.readAsDataURL(file);
   };
-
-  const frameTypes = [
-    { id: 'grapple', label: 'Luta', description: 'Faixa de kimono — preta e dourada' },
-    { id: 'lift', label: 'Levantamento', description: 'Barra de peso — aço' },
-    { id: 'run', label: 'Corrida', description: 'Tênis — verde energia' },
-    { id: 'swim', label: 'Natação', description: 'Óculos — azul água' }
-  ];
 
   const SPORTS = ['BJJ', 'Wrestling', 'Corrida', 'Musculação', 'Boxe', 'Luta livre'];
 
@@ -96,6 +127,7 @@ const Profile = () => {
       mainSport,
       photo,
       frame: selectedFrame,
+      emblem: selectedEmblem,
       ...(userType === 'student' && {
         weight: weight ? Number(weight) : null,
         height: height ? Number(height) : null,
@@ -123,12 +155,23 @@ const Profile = () => {
 
         {/* 1. Foto */}
         <div className="text-center">
-          <ShieldProfile
-            type={selectedFrame}
-            years={user?.years || 1}
-            size="large"
-            photo={photo}
-          />
+          <div className="relative inline-block">
+            <ShieldProfile
+              type={selectedFrame}
+              emblem={selectedEmblem}
+              hit={myStreak}
+              size="large"
+              photo={photo}
+            />
+            <button
+              type="button"
+              onClick={() => setShowFrames(true)}
+              aria-label="Personalizar escudo"
+              className="absolute -bottom-1 -right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg border-2 border-gray-900"
+            >
+              <Edit className="w-4 h-4" />
+            </button>
+          </div>
           <div className="mt-3">
             <label className="inline-block cursor-pointer text-sm text-red-400 hover:text-red-300">
               Trocar foto
@@ -249,33 +292,6 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* 3. Molduras */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Moldura do Perfil</h3>
-
-          <div className="grid grid-cols-1 gap-3">
-            {frameTypes.map((frame) => (
-              <button
-                key={frame.id}
-                onClick={() => setSelectedFrame(frame.id)}
-                className={`dojo-card p-4 text-left transition-all ${
-                  selectedFrame === frame.id
-                    ? 'border-red-500 bg-red-500/10'
-                    : 'hover:bg-white/5'
-                }`}
-              >
-                <div className="flex items-center gap-4">
-                  <ShieldProfile type={frame.id} years={user?.years || 1} size="small" photo={photo} />
-                  <div>
-                    <h4 className="font-semibold">{frame.label}</h4>
-                    <p className="text-sm text-gray-400">{frame.description}</p>
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
         {/* 4. Acompanhar progresso */}
         {userType === 'student' && (
           <div className="dojo-card p-4">
@@ -325,6 +341,96 @@ const Profile = () => {
           </Button>
         </div>
       </motion.div>
+
+      {/* Painel de personalização do escudo */}
+      {showFrames && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 p-4"
+          onClick={() => setShowFrames(false)}
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            onClick={(e) => e.stopPropagation()}
+            className="dojo-card w-full max-w-md p-5 space-y-5 max-h-[85vh] overflow-y-auto"
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold">Personalizar escudo</h3>
+              <button onClick={() => setShowFrames(false)} aria-label="Fechar">
+                <X className="w-5 h-5 text-gray-400 hover:text-white" />
+              </button>
+            </div>
+
+            {/* Prévia ao vivo */}
+            <div className="flex justify-center">
+              <ShieldProfile
+                type={selectedFrame}
+                emblem={selectedEmblem}
+                hit={myStreak}
+                size="large"
+                photo={photo}
+              />
+            </div>
+
+            {/* Painel 1: Moldura (lista: cor + raridade) */}
+            <div className="space-y-2">
+              <h4 className="text-sm font-semibold text-gray-300">Moldura</h4>
+              <div className="space-y-2">
+                {MOLDURAS.map((m) => {
+                  const active = selectedFrame === m.id;
+                  return (
+                    <button
+                      key={m.id}
+                      onClick={() => setSelectedFrame(m.id)}
+                      className={`w-full flex items-center gap-3 p-2 rounded-lg border transition-all ${
+                        active ? 'border-red-500 bg-red-500/10' : 'border-gray-700 hover:bg-white/5'
+                      }`}
+                    >
+                      <span
+                        className={`shield-frame shield-${m.id}`}
+                        style={{ width: 36, height: 36, margin: 0 }}
+                      />
+                      <span className="flex-1 text-left font-medium text-sm">{m.label}</span>
+                      <span
+                        className="text-xs font-semibold"
+                        style={{ color: RARITY_COLOR[m.rarity] }}
+                      >
+                        {m.rarity}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Painel 2: Selo de esporte */}
+            <div className="space-y-2">
+              <h4 className="text-sm font-semibold text-gray-300">Selo de esporte</h4>
+              <div className="grid grid-cols-3 gap-2">
+                {SELOS.map((s) => {
+                  const active = selectedEmblem === s.id;
+                  return (
+                    <button
+                      key={s.label}
+                      onClick={() => setSelectedEmblem(s.id)}
+                      className={`flex flex-col items-center gap-1 p-2 rounded-lg border transition-all ${
+                        active ? 'border-red-500 bg-red-500/10' : 'border-gray-700 hover:bg-white/5'
+                      }`}
+                    >
+                      <ShieldProfile type={selectedFrame} emblem={s.id} size="small" />
+                      <span className="text-xs">{s.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <p className="text-xs text-gray-500 text-center">
+              As mudanças aparecem na hora. Toque em "Salvar Alterações" para guardar.
+            </p>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };

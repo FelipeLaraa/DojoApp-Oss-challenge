@@ -191,7 +191,7 @@ const StudentHome = () => {
         {/* Seu resumo */}
         <div className="dojo-card p-4">
           <div className="flex items-center gap-4">
-            <ShieldProfile type={user?.frame || 'black'} years={user?.years || 1} size="small" photo={user?.photo} />
+            <ShieldProfile type={user?.frame || 'black'} emblem={user?.emblem} hit={streak} size="small" photo={user?.photo} />
             <div className="flex-1">
               <h2 className="text-lg font-bold">Olá, {user?.name}!</h2>
               <p className="text-sm text-gray-400">{user?.mainSport || 'BJJ'}</p>
@@ -223,7 +223,7 @@ const StudentHome = () => {
               <div key={f.id} className="dojo-card p-4 border border-yellow-500/20">
                 <div className="flex items-center gap-4">
                   <button onClick={() => navigate(`/athlete/${f.id}`)}>
-                    <ShieldProfile type={f.frame} years={f.years} size="small" photo={f.photo} />
+                    <ShieldProfile type={f.frame} emblem={f.emblem} hit={f.streak} size="small" photo={f.photo} />
                   </button>
                   <div className="flex-1">
                     <h4 className="font-semibold">{f.name}</h4>
@@ -246,7 +246,7 @@ const StudentHome = () => {
             <div key={f.id} className="dojo-card p-4">
               <div className="flex items-center gap-4">
                 <button onClick={() => navigate(`/athlete/${f.id}`)}>
-                  <ShieldProfile type={f.frame} years={f.years} size="small" photo={f.photo} />
+                  <ShieldProfile type={f.frame} emblem={f.emblem} hit={f.streak} size="small" photo={f.photo} />
                 </button>
                 <div className="flex-1">
                   <h4 className="font-semibold">

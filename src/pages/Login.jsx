@@ -124,7 +124,7 @@ const Login = () => {
                 onClick={() => handleCharacterLogin(character)}
                 className="flex flex-col items-center p-2 rounded-lg border border-gray-700 hover:border-red-500 hover:bg-red-500/10 transition-all"
               >
-                <ShieldProfile type={character.frame} years={character.years} size="small" photo={character.photo} />
+                <ShieldProfile type={character.frame} emblem={character.emblem} hit={character.streak} size="small" photo={character.photo} />
                 <span className="text-xs mt-2 font-medium">{character.name}</span>
                 <span className="text-[10px] text-gray-400">{character.belt}</span>
               </button>

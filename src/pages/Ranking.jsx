@@ -239,9 +239,8 @@ const Ranking = () => {
                     {getPositionIcon(person.position)}
                   </div>
                   
-                  <ShieldProfile 
+                  <ShieldProfile
                     type={person.frame}
-                    years={2}
                     size="small"
                   />
                   
@@ -272,9 +271,8 @@ const Ranking = () => {
               #12
             </div>
             
-            <ShieldProfile 
+            <ShieldProfile
               type="black"
-              years={1}
               size="small"
             />
             

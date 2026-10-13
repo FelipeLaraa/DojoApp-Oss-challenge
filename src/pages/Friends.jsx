@@ -102,7 +102,7 @@ const Friends = () => {
                   onClick={() => navigate(`/athlete/${friend.id}`)}
                   className="flex items-center gap-4 flex-1 text-left hover:opacity-80 transition-opacity"
                 >
-                  <ShieldProfile type={friend.frame} years={friend.years} size="small" photo={friend.photo} />
+                  <ShieldProfile type={friend.frame} emblem={friend.emblem} hit={friend.streak} size="small" photo={friend.photo} />
                   <div className="flex-1">
                     <h4 className="font-semibold">{friend.name}</h4>
                     <p className={`text-sm ${friend.activity?.inactive ? 'text-gray-500' : 'text-red-400'}`}>

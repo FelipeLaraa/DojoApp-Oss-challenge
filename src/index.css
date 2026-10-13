@@ -167,7 +167,7 @@ body {
   box-shadow: 0 12px 32px rgba(255, 107, 107, 0.4);
 }
 
-.bottom-nav {
+.app-nav {
   position: fixed;
   bottom: 0;
   left: 50%;
@@ -178,6 +178,36 @@ body {
   backdrop-filter: blur(20px);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   padding: 12px 0;
+  z-index: 50;
+}
+
+.app-nav-inner {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+/* Desktop: navegação vira barra lateral vertical à esquerda */
+@media (min-width: 768px) {
+  .app-nav {
+    left: 0;
+    top: 0;
+    bottom: 0;
+    transform: none;
+    width: 96px;
+    max-width: none;
+    height: 100vh;
+    border-top: none;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 28px 0;
+  }
+
+  .app-nav-inner {
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 28px;
+    height: 100%;
+  }
 }
 
 .nav-item {

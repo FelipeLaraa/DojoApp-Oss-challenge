@@ -12,6 +12,7 @@ import CheckIn from '@/pages/CheckIn';
 import TeacherChecklist from '@/pages/TeacherChecklist';
 import Profile from '@/pages/Profile';
 import Ranking from '@/pages/Ranking';
+import Friends from '@/pages/Friends';
 import BottomNav from '@/components/BottomNav';
 
 function App() {
@@ -34,6 +35,7 @@ function App() {
             <Route path="/teacher-checklist/:classId" element={<TeacherChecklist />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/ranking" element={<Ranking />} />
+            <Route path="/friends" element={<Friends />} />
           </Routes>
           
           <BottomNav />

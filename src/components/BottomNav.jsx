@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Home, Calendar, QrCode, Trophy, User } from 'lucide-react';
+import { Home, Calendar, QrCode, Trophy, User, Users } from 'lucide-react';
 
 const BottomNav = () => {
   const location = useLocation();
@@ -24,12 +24,13 @@ const BottomNav = () => {
     { path: '/schedule', icon: Calendar, label: 'Agenda' },
     { path: '/checkin', icon: QrCode, label: 'Check-in' },
     { path: '/ranking', icon: Trophy, label: 'Ranking' },
+    { path: '/friends', icon: Users, label: 'Amigos' },
     { path: '/profile', icon: User, label: 'Perfil' }
   ];
 
   return (
-    <nav className="bottom-nav">
-      <div className="flex justify-around items-center">
+    <nav className="app-nav">
+      <div className="app-nav-inner">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (

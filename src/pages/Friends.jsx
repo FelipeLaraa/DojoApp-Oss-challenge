@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { Send, Gift, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
@@ -29,6 +30,7 @@ const readNotifications = (userId) => {
 
 const Friends = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [openFor, setOpenFor] = useState(null); // id do amigo com o form aberto
   const [item, setItem] = useState(ITEMS[0]);
@@ -95,14 +97,19 @@ const Friends = () => {
           {friends.map((friend) => (
             <div key={friend.id} className="dojo-card p-4">
               <div className="flex items-center gap-4">
-                <ShieldProfile type={friend.frame} years={friend.years} size="small" photo={friend.photo} />
-                <div className="flex-1">
-                  <h4 className="font-semibold">{friend.name}</h4>
-                  <p className={`text-sm ${friend.activity?.inactive ? 'text-gray-500' : 'text-red-400'}`}>
-                    {friend.activity?.headline}
-                  </p>
-                  <p className="text-xs text-gray-400">{friend.activity?.detail}</p>
-                </div>
+                <button
+                  onClick={() => navigate(`/athlete/${friend.id}`)}
+                  className="flex items-center gap-4 flex-1 text-left hover:opacity-80 transition-opacity"
+                >
+                  <ShieldProfile type={friend.frame} years={friend.years} size="small" photo={friend.photo} />
+                  <div className="flex-1">
+                    <h4 className="font-semibold">{friend.name}</h4>
+                    <p className={`text-sm ${friend.activity?.inactive ? 'text-gray-500' : 'text-red-400'}`}>
+                      {friend.activity?.headline}
+                    </p>
+                    <p className="text-xs text-gray-400">{friend.activity?.detail}</p>
+                  </div>
+                </button>
                 <Button
                   onClick={() => setOpenFor(openFor === friend.id ? null : friend.id)}
                   variant="outline"

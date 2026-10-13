@@ -13,6 +13,7 @@ import TeacherChecklist from '@/pages/TeacherChecklist';
 import Profile from '@/pages/Profile';
 import Ranking from '@/pages/Ranking';
 import Friends from '@/pages/Friends';
+import AthleteProfile from '@/pages/AthleteProfile';
 import BottomNav from '@/components/BottomNav';
 
 function App() {
@@ -36,6 +37,7 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/ranking" element={<Ranking />} />
             <Route path="/friends" element={<Friends />} />
+            <Route path="/athlete/:id" element={<AthleteProfile />} />
           </Routes>
           
           <BottomNav />

@@ -117,6 +117,62 @@ body {
     0 6px 16px rgba(0, 0, 0, 0.4);
 }
 
+/* Moldura Natação — azul água, selo de óculos */
+.shield-swim {
+  background: linear-gradient(135deg, #2aa7e0 0%, #1565c0 100%);
+  border: 4px solid #9fe0ff;
+  box-shadow:
+    inset 0 2px 6px rgba(255, 255, 255, 0.35),
+    0 0 22px rgba(42, 167, 224, 0.6),
+    0 6px 16px rgba(0, 0, 0, 0.45);
+}
+
+/* Moldura Levantamento — aço escuro, selo de barra */
+.shield-lift {
+  background: linear-gradient(135deg, #5a6b78 0%, #2c3a44 100%);
+  border: 4px solid #aab6bf;
+  box-shadow:
+    inset 0 2px 6px rgba(255, 255, 255, 0.25),
+    0 0 20px rgba(120, 140, 155, 0.55),
+    0 6px 16px rgba(0, 0, 0, 0.5);
+}
+
+/* Moldura Luta — preta com dourado, selo de faixa */
+.shield-grapple {
+  background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%);
+  border: 4px solid #d4af37;
+  box-shadow:
+    inset 0 0 0 2px rgba(0, 0, 0, 0.7),
+    inset 0 2px 6px rgba(255, 223, 150, 0.25),
+    0 0 20px rgba(212, 175, 55, 0.55),
+    0 6px 16px rgba(0, 0, 0, 0.5);
+}
+
+/* Moldura Corrida — verde energia, selo de tênis */
+.shield-run {
+  background: linear-gradient(135deg, #2ec27a 0%, #1b8a52 100%);
+  border: 4px solid #b6f0cf;
+  box-shadow:
+    inset 0 2px 6px rgba(255, 255, 255, 0.3),
+    0 0 22px rgba(46, 194, 122, 0.6),
+    0 6px 16px rgba(0, 0, 0, 0.45);
+}
+
+/* Selo do esporte no canto superior direito */
+.emblem-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #0a0a0a;
+  color: #ffffff;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
 .years-badge {
   position: absolute;
   bottom: -10px;

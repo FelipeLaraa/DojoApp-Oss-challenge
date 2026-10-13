@@ -50,9 +50,10 @@ const Profile = () => {
   };
 
   const frameTypes = [
-    { id: 'black', label: 'Obsidiana', description: 'Preta com metal dourado' },
-    { id: 'coral', label: 'Chama', description: 'Coral vibrante e quente' },
-    { id: 'white', label: 'Prata', description: 'Branca limpa e metálica' }
+    { id: 'grapple', label: 'Luta', description: 'Faixa de kimono — preta e dourada' },
+    { id: 'lift', label: 'Levantamento', description: 'Barra de peso — aço' },
+    { id: 'run', label: 'Corrida', description: 'Tênis — verde energia' },
+    { id: 'swim', label: 'Natação', description: 'Óculos — azul água' }
   ];
 
   const SPORTS = ['BJJ', 'Wrestling', 'Corrida', 'Musculação', 'Boxe', 'Luta livre'];

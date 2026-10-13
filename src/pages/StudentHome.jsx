@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Flame, Plus, Gift, Zap } from 'lucide-react';
+import { Flame, Plus, Zap, Dumbbell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 import ShieldProfile from '@/components/ShieldProfile';
@@ -12,6 +12,13 @@ import { characters } from '@/data/characters';
 // Recência fictícia por enquanto — vira real quando houver registro de treino.
 const recency = { nicole: 'há 3 h', thiago: 'há 1 dia', felipe: 'há 6 h', ciclano: 'há 5 dias' };
 
+// 3 reações de incentivo (1 toque).
+const REACTIONS = [
+  { id: 'Fogo', label: 'Fogo', icon: Flame, color: 'text-orange-400' },
+  { id: 'Força', label: 'Força', icon: Dumbbell, color: 'text-red-400' },
+  { id: 'Cutucar', label: 'Cutucar', icon: Zap, color: 'text-yellow-400' }
+];
+
 const mergeSaved = (character) => {
   try {
     const saved = localStorage.getItem(`dojoProfile_${character.id}`);
@@ -20,6 +27,21 @@ const mergeSaved = (character) => {
     return character;
   }
 };
+
+const ReactionRow = ({ onReact }) => (
+  <div className="flex gap-2 mt-3">
+    {REACTIONS.map((r) => (
+      <button
+        key={r.id}
+        onClick={() => onReact(r.id)}
+        className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg border border-gray-700 hover:border-red-500 hover:bg-white/5 transition-all text-sm"
+      >
+        <r.icon className={`w-4 h-4 ${r.color}`} />
+        {r.label}
+      </button>
+    ))}
+  </div>
+);
 
 const StudentHome = () => {
   const { user } = useAuth();
@@ -90,11 +112,8 @@ const StudentHome = () => {
                     <h4 className="font-semibold">{f.name}</h4>
                     <p className="text-xs text-gray-500">{f.activity.detail} • {recency[f.id] || 'faz tempo'}</p>
                   </div>
-                  <Button onClick={() => sendQuick(f, 'Cutucada')} variant="outline" className="flex items-center gap-2">
-                    <Zap className="w-4 h-4" />
-                    Cutucar
-                  </Button>
                 </div>
+                <ReactionRow onReact={(item) => sendQuick(f, item)} />
               </div>
             ))}
           </div>
@@ -118,11 +137,8 @@ const StudentHome = () => {
                   </h4>
                   <p className="text-xs text-gray-400">{f.activity?.detail} • {recency[f.id] || 'recente'}</p>
                 </div>
-                <Button onClick={() => sendQuick(f, 'Parabéns')} variant="outline" className="flex items-center gap-2">
-                  <Gift className="w-4 h-4" />
-                  Incentivar
-                </Button>
               </div>
+              <ReactionRow onReact={(item) => sendQuick(f, item)} />
             </div>
           ))}
         </div>

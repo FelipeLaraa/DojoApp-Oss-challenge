@@ -8,8 +8,13 @@ import ShieldProfile from '@/components/ShieldProfile';
 import ProgressBar from '@/components/ProgressBar';
 
 const Profile = () => {
-  const { user, userType, logout } = useAuth();
-  const [selectedFrame, setSelectedFrame] = useState('black');
+  const { user, userType, logout, updateUser } = useAuth();
+  const [selectedFrame, setSelectedFrame] = useState(user?.frame || 'black');
+  const [name, setName] = useState(user?.name || '');
+  const [email, setEmail] = useState(user?.email || '');
+  const [weight, setWeight] = useState(user?.weight || '');
+  const [height, setHeight] = useState(user?.height || '');
+  const [belt, setBelt] = useState(user?.belt || 'Branca');
 
   const frameTypes = [
     { id: 'black', label: 'Preta Brilhante', description: 'Clássica e elegante' },
@@ -47,6 +52,16 @@ const Profile = () => {
   };
 
   const handleSaveProfile = () => {
+    updateUser({
+      name,
+      email,
+      frame: selectedFrame,
+      ...(userType === 'student' && {
+        weight: weight ? Number(weight) : null,
+        height: height ? Number(height) : null,
+        belt
+      })
+    });
     toast({
       title: "Perfil atualizado!",
       description: "Suas alterações foram salvas com sucesso"
@@ -150,7 +165,8 @@ const Profile = () => {
               <label className="block text-sm font-medium mb-1">Nome</label>
               <input
                 type="text"
-                defaultValue={user?.name}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 className="w-full p-2 rounded-lg bg-gray-800 border border-gray-600 focus:border-red-500 focus:outline-none text-sm"
               />
             </div>
@@ -159,7 +175,8 @@ const Profile = () => {
               <label className="block text-sm font-medium mb-1">Email</label>
               <input
                 type="email"
-                defaultValue={user?.email}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full p-2 rounded-lg bg-gray-800 border border-gray-600 focus:border-red-500 focus:outline-none text-sm"
               />
             </div>
@@ -171,7 +188,8 @@ const Profile = () => {
                     <label className="block text-sm font-medium mb-1">Peso (kg)</label>
                     <input
                       type="number"
-                      defaultValue={user?.weight}
+                      value={weight}
+                      onChange={(e) => setWeight(e.target.value)}
                       className="w-full p-2 rounded-lg bg-gray-800 border border-gray-600 focus:border-red-500 focus:outline-none text-sm"
                     />
                   </div>
@@ -179,7 +197,8 @@ const Profile = () => {
                     <label className="block text-sm font-medium mb-1">Altura (cm)</label>
                     <input
                       type="number"
-                      defaultValue={user?.height}
+                      value={height}
+                      onChange={(e) => setHeight(e.target.value)}
                       className="w-full p-2 rounded-lg bg-gray-800 border border-gray-600 focus:border-red-500 focus:outline-none text-sm"
                     />
                   </div>
@@ -187,7 +206,11 @@ const Profile = () => {
                 
                 <div>
                   <label className="block text-sm font-medium mb-1">Faixa Atual</label>
-                  <select className="w-full p-2 rounded-lg bg-gray-800 border border-gray-600 focus:border-red-500 focus:outline-none text-sm">
+                  <select
+                    value={belt}
+                    onChange={(e) => setBelt(e.target.value)}
+                    className="w-full p-2 rounded-lg bg-gray-800 border border-gray-600 focus:border-red-500 focus:outline-none text-sm"
+                  >
                     <option value="Branca">Branca</option>
                     <option value="Azul">Azul</option>
                     <option value="Roxa">Roxa</option>

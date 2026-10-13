@@ -41,11 +41,18 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('dojoUserType');
   };
 
+  const updateUser = (updatedFields) => {
+    const newUser = { ...user, ...updatedFields };
+    setUser(newUser);
+    localStorage.setItem('dojoUser', JSON.stringify(newUser));
+  };
+
   const value = {
     user,
     userType,
     login,
     logout,
+    updateUser,
     loading
   };
 

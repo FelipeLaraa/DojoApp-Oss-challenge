@@ -1,34 +1,21 @@
 import React from 'react';
+import { Dumbbell, Waves, Footprints } from 'lucide-react';
 
-// Emblemas temáticos (SVG) desenhados em traço branco.
+// Emblemas de esporte. Ícones polidos da lucide + faixa de BJJ desenhada à mão.
 const emblems = {
-  swim: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="8" cy="13" r="3.2" />
-      <circle cx="16" cy="13" r="3.2" />
-      <path d="M11.2 12.5h1.6" />
-      <path d="M4.8 11.5l-1.3-2.2a2 2 0 0 1 1.7-3h.3" />
-      <path d="M19.2 11.5l1.3-2.2a2 2 0 0 0-1.7-3h-.3" />
-    </svg>
-  ),
-  lift: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 10.5c3 3 15 3 18 0" />
-      <path d="M3.5 8v5M5.5 9v3M18.5 9v3M20.5 8v5" />
-    </svg>
-  ),
+  // Luta (BJJ): faixa amarrada com nó e pontas.
   grapple: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 9h16v3H4z" />
-      <path d="M11 12l-2.5 5M13 12l2.5 5" />
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-full h-full">
+      <path d="M2.5 11h6.5" />
+      <path d="M15 11h6.5" />
+      <rect x="9" y="8.5" width="6" height="5" rx="1.3" />
+      <path d="M10.6 13.5l-1.1 4.2" />
+      <path d="M13.4 13.5l1.1 4.2" />
     </svg>
   ),
-  run: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 16h12l4-1.5c1.5-.5 2-1 2-2 0-.8-.6-1.3-1.6-1.2l-4.4.4-3-3-2 2 2.5 2.5-6 .3" />
-      <path d="M3 18.5h18" />
-    </svg>
-  )
+  lift: <Dumbbell className="w-full h-full" />,
+  run: <Footprints className="w-full h-full" />,
+  swim: <Waves className="w-full h-full" />
 };
 
 // Cor do selo "hit" (sequência) por faixa: cinza → laranja → vermelho → roxo.
@@ -65,9 +52,9 @@ const ShieldProfile = ({ type = 'black', hit = null, size = 'medium', photo = nu
   };
 
   const emblemSize = {
-    small: 'w-5 h-5 p-0.5',
-    medium: 'w-7 h-7 p-1',
-    large: 'w-9 h-9 p-1.5'
+    small: 'w-7 h-7 p-1',
+    medium: 'w-9 h-9 p-1.5',
+    large: 'w-12 h-12 p-2'
   };
 
   // Se emblem foi passado (inclusive null para "nenhum"), ele manda. Caso

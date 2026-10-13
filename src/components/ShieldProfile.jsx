@@ -1,6 +1,6 @@
 import React from 'react';
 
-const ShieldProfile = ({ type = 'black', years = 1, size = 'medium' }) => {
+const ShieldProfile = ({ type = 'black', years = 1, size = 'medium', photo = null }) => {
   const sizeClasses = {
     small: 'w-12 h-12',
     medium: 'w-20 h-20',
@@ -21,8 +21,12 @@ const ShieldProfile = ({ type = 'black', years = 1, size = 'medium' }) => {
 
   return (
     <div className="relative inline-block">
-      <div className={`shield-frame ${frameClasses[type]} ${sizeClasses[size]}`}>
-        <span className="text-2xl">🥋</span>
+      <div className={`shield-frame ${frameClasses[type]} ${sizeClasses[size]} overflow-hidden`}>
+        {photo ? (
+          <img src={photo} alt="Foto do perfil" className="w-full h-full object-cover" />
+        ) : (
+          <span className="text-2xl">🥋</span>
+        )}
       </div>
       <div className={`years-badge ${yearsBadgeSize[size]}`}>
         {years}

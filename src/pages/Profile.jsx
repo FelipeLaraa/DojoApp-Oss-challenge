@@ -15,6 +15,23 @@ const Profile = () => {
   const [weight, setWeight] = useState(user?.weight || '');
   const [height, setHeight] = useState(user?.height || '');
   const [belt, setBelt] = useState(user?.belt || 'Branca');
+  const [photo, setPhoto] = useState(user?.photo || null);
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Arquivo inválido",
+        description: "Escolha uma imagem (JPG, PNG, etc.)",
+        variant: "destructive"
+      });
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => setPhoto(reader.result);
+    reader.readAsDataURL(file);
+  };
 
   const frameTypes = [
     { id: 'black', label: 'Preta Brilhante', description: 'Clássica e elegante' },
@@ -55,6 +72,7 @@ const Profile = () => {
     updateUser({
       name,
       email,
+      photo,
       frame: selectedFrame,
       ...(userType === 'student' && {
         weight: weight ? Number(weight) : null,
@@ -83,12 +101,24 @@ const Profile = () => {
 
         {/* Profile Picture */}
         <div className="text-center">
-          <ShieldProfile 
+          <ShieldProfile
             type={selectedFrame}
             years={user?.years || 1}
             size="large"
+            photo={photo}
           />
-          <h2 className="text-xl font-bold mt-4">{user?.name}</h2>
+          <div className="mt-3">
+            <label className="inline-block cursor-pointer text-sm text-red-400 hover:text-red-300">
+              Trocar foto
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoChange}
+                className="hidden"
+              />
+            </label>
+          </div>
+          <h2 className="text-xl font-bold mt-2">{name}</h2>
           {userType === 'student' && (
             <p className="text-gray-300">
               Faixa {user?.belt} • {user?.weight}kg • {user?.height}cm
@@ -112,7 +142,7 @@ const Profile = () => {
                 }`}
               >
                 <div className="flex items-center gap-4">
-                  <ShieldProfile type={frame.id} years={user?.years || 1} size="small" />
+                  <ShieldProfile type={frame.id} years={user?.years || 1} size="small" photo={photo} />
                   <div>
                     <h4 className="font-semibold">{frame.label}</h4>
                     <p className="text-sm text-gray-400">{frame.description}</p>

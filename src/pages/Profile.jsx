@@ -120,7 +120,7 @@ const Profile = () => {
           <p className="text-gray-300 capitalize">{userType}</p>
         </div>
 
-        {/* Profile Picture */}
+        {/* 1. Foto */}
         <div className="text-center">
           <ShieldProfile
             type={selectedFrame}
@@ -147,70 +147,13 @@ const Profile = () => {
           {bio && <p className="text-gray-300 text-sm mt-2 max-w-xs mx-auto">{bio}</p>}
         </div>
 
-        {/* Frame Selection */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Moldura do Perfil</h3>
-          
-          <div className="grid grid-cols-1 gap-3">
-            {frameTypes.map((frame) => (
-              <button
-                key={frame.id}
-                onClick={() => setSelectedFrame(frame.id)}
-                className={`dojo-card p-4 text-left transition-all ${
-                  selectedFrame === frame.id
-                    ? 'border-red-500 bg-red-500/10'
-                    : 'hover:bg-white/5'
-                }`}
-              >
-                <div className="flex items-center gap-4">
-                  <ShieldProfile type={frame.id} years={user?.years || 1} size="small" photo={photo} />
-                  <div>
-                    <h4 className="font-semibold">{frame.label}</h4>
-                    <p className="text-sm text-gray-400">{frame.description}</p>
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Progress (Student only) */}
-        {userType === 'student' && (
-          <div className="dojo-card p-4">
-            <h3 className="font-semibold mb-3 flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-yellow-500" />
-              Progresso para Próxima Faixa
-            </h3>
-            <ProgressBar 
-              current={user?.progress || 20} 
-              max={user?.maxProgress || 60}
-              label="aulas"
-            />
-          </div>
-        )}
-
-        {/* Stats */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Estatísticas</h3>
-          
-          <div className="grid grid-cols-2 gap-4">
-            {stats[userType]?.map((stat, index) => (
-              <div key={index} className="dojo-card p-4 text-center">
-                <stat.icon className="w-6 h-6 text-red-500 mx-auto mb-2" />
-                <div className="text-xl font-bold">{stat.value}</div>
-                <p className="text-xs text-gray-400">{stat.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Profile Info */}
+        {/* 2. Bio / Informações */}
         <div className="dojo-card p-4 space-y-4">
           <h3 className="font-semibold flex items-center gap-2">
             <Edit className="w-5 h-5" />
             Informações Pessoais
           </h3>
-          
+
           <div className="space-y-3">
             <div>
               <label className="block text-sm font-medium mb-1">Nome</label>
@@ -221,7 +164,7 @@ const Profile = () => {
                 className="w-full p-2 rounded-lg bg-gray-800 border border-gray-600 focus:border-red-500 focus:outline-none text-sm"
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium mb-1">Usuário</label>
               <div className="flex items-center rounded-lg bg-gray-800 border border-gray-600 focus-within:border-red-500">
@@ -285,7 +228,7 @@ const Profile = () => {
                     />
                   </div>
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium mb-1">Faixa Atual</label>
                   <select
@@ -305,7 +248,64 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Actions */}
+        {/* 3. Molduras */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">Moldura do Perfil</h3>
+
+          <div className="grid grid-cols-1 gap-3">
+            {frameTypes.map((frame) => (
+              <button
+                key={frame.id}
+                onClick={() => setSelectedFrame(frame.id)}
+                className={`dojo-card p-4 text-left transition-all ${
+                  selectedFrame === frame.id
+                    ? 'border-red-500 bg-red-500/10'
+                    : 'hover:bg-white/5'
+                }`}
+              >
+                <div className="flex items-center gap-4">
+                  <ShieldProfile type={frame.id} years={user?.years || 1} size="small" photo={photo} />
+                  <div>
+                    <h4 className="font-semibold">{frame.label}</h4>
+                    <p className="text-sm text-gray-400">{frame.description}</p>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 4. Acompanhar progresso */}
+        {userType === 'student' && (
+          <div className="dojo-card p-4">
+            <h3 className="font-semibold mb-3 flex items-center gap-2">
+              <Trophy className="w-5 h-5 text-yellow-500" />
+              Progresso para Próxima Faixa
+            </h3>
+            <ProgressBar
+              current={user?.progress || 20}
+              max={user?.maxProgress || 60}
+              label="aulas"
+            />
+          </div>
+        )}
+
+        {/* 5. Estatísticas */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">Estatísticas</h3>
+
+          <div className="grid grid-cols-2 gap-4">
+            {stats[userType]?.map((stat, index) => (
+              <div key={index} className="dojo-card p-4 text-center">
+                <stat.icon className="w-6 h-6 text-red-500 mx-auto mb-2" />
+                <div className="text-xl font-bold">{stat.value}</div>
+                <p className="text-xs text-gray-400">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 6. Salvar */}
         <div className="space-y-3">
           <Button
             onClick={handleSaveProfile}
@@ -313,7 +313,7 @@ const Profile = () => {
           >
             Salvar Alterações
           </Button>
-          
+
           <Button
             onClick={handleLogout}
             variant="outline"

@@ -11,6 +11,7 @@ import Schedule from '@/pages/Schedule';
 import CheckIn from '@/pages/CheckIn';
 import TeacherChecklist from '@/pages/TeacherChecklist';
 import Profile from '@/pages/Profile';
+import RegisterActivity from '@/pages/RegisterActivity';
 import Ranking from '@/pages/Ranking';
 import Friends from '@/pages/Friends';
 import AthleteProfile from '@/pages/AthleteProfile';
@@ -35,6 +36,7 @@ function App() {
             <Route path="/checkin" element={<CheckIn />} />
             <Route path="/teacher-checklist/:classId" element={<TeacherChecklist />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/register" element={<RegisterActivity />} />
             <Route path="/ranking" element={<Ranking />} />
             <Route path="/friends" element={<Friends />} />
             <Route path="/athlete/:id" element={<AthleteProfile />} />

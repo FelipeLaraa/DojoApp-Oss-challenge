@@ -8,6 +8,7 @@ import { toast } from '@/components/ui/use-toast';
 import ShieldProfile from '@/components/ShieldProfile';
 import ProgressBar from '@/components/ProgressBar';
 import { characters } from '@/data/characters';
+import { readActivities, computeStreak } from '@/lib/activity';
 
 // Recência fictícia por enquanto — vira real quando houver registro de treino.
 const recency = { nicole: 'há 3 h', thiago: 'há 1 dia', felipe: 'há 6 h', ciclano: 'há 5 dias' };
@@ -90,12 +91,9 @@ const StudentHome = () => {
   const senderIdOf = (n) =>
     n.fromId || characters.find((c) => c.name.toLowerCase() === (n.from || '').toLowerCase())?.id;
 
-  const handleRegister = () => {
-    toast({
-      title: "Registrar treino — em breve",
-      description: "Vai alimentar sua sequência e seus status de verdade."
-    });
-  };
+  const streak = computeStreak(readActivities(user?.id));
+
+  const handleRegister = () => navigate('/register');
 
   return (
     <div className="min-h-screen pb-24 p-6 dojo-gradient">
@@ -197,6 +195,12 @@ const StudentHome = () => {
             <div className="flex-1">
               <h2 className="text-lg font-bold">Olá, {user?.name}!</h2>
               <p className="text-sm text-gray-400">{user?.mainSport || 'BJJ'}</p>
+              <p className="text-sm font-semibold flex items-center gap-1 mt-0.5">
+                <Flame className={`w-4 h-4 ${streak > 0 ? 'text-orange-400' : 'text-gray-600'}`} />
+                {streak > 0
+                  ? `${streak} ${streak === 1 ? 'dia' : 'dias'} de sequência`
+                  : 'Sem sequência ainda'}
+              </p>
             </div>
             <Button onClick={handleRegister} className="dojo-button flex items-center gap-2">
               <Plus className="w-4 h-4" />

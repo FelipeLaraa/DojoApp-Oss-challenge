@@ -15,7 +15,8 @@ export const characters = [
     classesAttended: 2140,
     weight: 84,
     height: 180,
-    bio: 'O mestre do dojo. Calmo porque não precisa provar nada.'
+    bio: 'O mestre do dojo. Calmo porque não precisa provar nada.',
+    activity: { headline: 'Determinado', detail: '4 dias na semana com check-in' }
   },
   {
     id: 'thiago',
@@ -29,7 +30,8 @@ export const characters = [
     classesAttended: 460,
     weight: 72,
     height: 176,
-    bio: 'Jovem talento subindo rápido. Vence no instinto.'
+    bio: 'Jovem talento subindo rápido. Vence no instinto.',
+    activity: { headline: 'Eclético', detail: '3 modalidades diferentes este mês' }
   },
   {
     id: 'nicole',
@@ -43,7 +45,8 @@ export const characters = [
     classesAttended: 1120,
     weight: 63,
     height: 168,
-    bio: 'A mente técnica. Não é a mais forte, é a que lê o jogo.'
+    bio: 'A mente técnica. Não é a mais forte, é a que lê o jogo.',
+    activity: { headline: '50 km', detail: 'percorridos este mês' }
   },
   {
     id: 'ciclano',
@@ -57,6 +60,7 @@ export const characters = [
     classesAttended: 38,
     weight: 78,
     height: 175,
-    bio: 'Começando do zero, com garra e fome de evoluir.'
+    bio: 'Começando do zero, com garra e fome de evoluir.',
+    activity: { headline: 'Inativo', detail: 'sem treinos recentes', inactive: true }
   }
 ];

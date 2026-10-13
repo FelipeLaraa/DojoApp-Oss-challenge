@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Flame, Plus, Zap, Dumbbell } from 'lucide-react';
+import { Flame, Plus, Zap, Dumbbell, Bell, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 import ShieldProfile from '@/components/ShieldProfile';
@@ -47,6 +47,23 @@ const StudentHome = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [, force] = useState(0);
+  const [showNotif, setShowNotif] = useState(false);
+
+  const seenKey = `dojoNotifSeen_${user?.id}`;
+  const [lastSeen, setLastSeen] = useState(() => {
+    try { return Number(localStorage.getItem(seenKey) || 0); } catch { return 0; }
+  });
+
+  let notifications = [];
+  try { notifications = JSON.parse(localStorage.getItem(`dojoNotifications_${user?.id}`) || '[]'); } catch {}
+  const unread = notifications.filter((n) => new Date(n.date).getTime() > lastSeen).length;
+
+  const openNotif = () => {
+    const now = Date.now();
+    setShowNotif(true);
+    setLastSeen(now);
+    try { localStorage.setItem(seenKey, String(now)); } catch {}
+  };
 
   const friends = characters.filter((c) => c.id !== user?.id).map(mergeSaved);
   const inactive = friends.filter((f) => f.activity?.inactive);
@@ -77,6 +94,48 @@ const StudentHome = () => {
         animate={{ opacity: 1, y: 0 }}
         className="space-y-6"
       >
+        {/* Topo com sininho */}
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-bold">Início</h1>
+          <button
+            onClick={() => (showNotif ? setShowNotif(false) : openNotif())}
+            className="relative p-2 rounded-full hover:bg-white/5"
+          >
+            <Bell className="w-6 h-6" />
+            {unread > 0 && (
+              <span className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                {unread}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* Painel de notificações */}
+        {showNotif && (
+          <div className="dojo-card p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold flex items-center gap-2">
+                <Bell className="w-5 h-5 text-red-500" />
+                Notificações
+              </h3>
+              <button onClick={() => setShowNotif(false)}>
+                <X className="w-5 h-5 text-gray-400 hover:text-white" />
+              </button>
+            </div>
+            {notifications.length === 0 ? (
+              <p className="text-sm text-gray-400">Nada por aqui ainda. Treine e incentive!</p>
+            ) : (
+              notifications.map((n, i) => (
+                <div key={i} className="text-sm bg-white/5 rounded-lg p-3">
+                  <span className="font-medium">{n.from}</span> mandou{' '}
+                  <span className="text-red-400">{n.item}</span>
+                  {n.message && <p className="text-gray-300 mt-1">"{n.message}"</p>}
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
         {/* Seu resumo */}
         <div className="dojo-card p-4">
           <div className="flex items-center gap-4">

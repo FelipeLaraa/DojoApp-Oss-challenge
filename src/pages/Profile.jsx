@@ -417,7 +417,7 @@ const Profile = () => {
                         active ? 'border-red-500 bg-red-500/10' : 'border-gray-700 hover:bg-white/5'
                       }`}
                     >
-                      <ShieldProfile type={selectedFrame} emblem={s.id} size="small" />
+                      <ShieldProfile type={selectedFrame} emblem={s.id} size="small" photo={photo} />
                       <span className="text-xs">{s.label}</span>
                     </button>
                   );

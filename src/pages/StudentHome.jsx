@@ -69,16 +69,26 @@ const StudentHome = () => {
   const inactive = friends.filter((f) => f.activity?.inactive);
   const active = friends.filter((f) => !f.activity?.inactive);
 
-  const sendQuick = (friend, item) => {
+  const [replyIdx, setReplyIdx] = useState(null);
+  const [replyText, setReplyText] = useState('');
+
+  const sendTo = (targetId, targetName, item, message = '') => {
+    if (!targetId) return;
     try {
-      const key = `dojoNotifications_${friend.id}`;
+      const key = `dojoNotifications_${targetId}`;
       const current = JSON.parse(localStorage.getItem(key) || '[]');
-      const notif = { from: user?.name || 'Alguém', item, message: '', date: new Date().toISOString() };
+      const notif = { from: user?.name || 'Alguém', fromId: user?.id, item, message, date: new Date().toISOString() };
       localStorage.setItem(key, JSON.stringify([notif, ...current]));
     } catch {}
-    toast({ title: `Enviado para ${friend.name}!`, description: item });
+    toast({ title: `Enviado para ${targetName}!`, description: message ? `${item}: "${message}"` : item });
     force((n) => n + 1);
   };
+
+  const sendQuick = (friend, item) => sendTo(friend.id, friend.name, item);
+
+  // Resolve o id de quem mandou (notifs novas trazem fromId; antigas, pelo nome).
+  const senderIdOf = (n) =>
+    n.fromId || characters.find((c) => c.name.toLowerCase() === (n.from || '').toLowerCase())?.id;
 
   const handleRegister = () => {
     toast({
@@ -125,13 +135,57 @@ const StudentHome = () => {
             {notifications.length === 0 ? (
               <p className="text-sm text-gray-400">Nada por aqui ainda. Treine e incentive!</p>
             ) : (
-              notifications.map((n, i) => (
-                <div key={i} className="text-sm bg-white/5 rounded-lg p-3">
-                  <span className="font-medium">{n.from}</span> mandou{' '}
-                  <span className="text-red-400">{n.item}</span>
-                  {n.message && <p className="text-gray-300 mt-1">"{n.message}"</p>}
-                </div>
-              ))
+              notifications.map((n, i) => {
+                const sid = senderIdOf(n);
+                return (
+                  <div key={i} className="text-sm bg-white/5 rounded-lg p-3">
+                    <span className="font-medium">{n.from}</span> mandou{' '}
+                    <span className="text-red-400">{n.item}</span>
+                    {n.message && <p className="text-gray-300 mt-1">"{n.message}"</p>}
+
+                    {sid && (
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          onClick={() => sendTo(sid, n.from, 'Fogo')}
+                          className="flex items-center gap-1 px-2 py-1 rounded-lg border border-gray-700 hover:border-red-500 text-xs"
+                        >
+                          <Flame className="w-3.5 h-3.5 text-orange-400" />
+                          Devolver fogo
+                        </button>
+                        <button
+                          onClick={() => { setReplyIdx(replyIdx === i ? null : i); setReplyText(''); }}
+                          className="px-2 py-1 rounded-lg border border-gray-700 hover:border-red-500 text-xs"
+                        >
+                          Responder
+                        </button>
+                      </div>
+                    )}
+
+                    {replyIdx === i && (
+                      <div className="flex gap-2 mt-2">
+                        <input
+                          type="text"
+                          value={replyText}
+                          onChange={(e) => setReplyText(e.target.value)}
+                          placeholder="Responder..."
+                          className="flex-1 p-2 rounded-lg bg-gray-800 border border-gray-600 focus:border-red-500 focus:outline-none text-xs"
+                        />
+                        <button
+                          onClick={() => {
+                            if (!replyText.trim()) return;
+                            sendTo(sid, n.from, 'Resposta', replyText.trim());
+                            setReplyIdx(null);
+                            setReplyText('');
+                          }}
+                          className="px-3 py-1 rounded-lg dojo-button text-xs"
+                        >
+                          Enviar
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })
             )}
           </div>
         )}

@@ -47,6 +47,7 @@ const Friends = () => {
   const sendIncentive = (friend) => {
     const notif = {
       from: user?.name || 'Alguém',
+      fromId: user?.id,
       item,
       message: message.trim(),
       date: new Date().toISOString()

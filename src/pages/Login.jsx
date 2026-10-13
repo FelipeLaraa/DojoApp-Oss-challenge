@@ -21,6 +21,19 @@ const Login = () => {
     { id: 'academy', label: 'Academia', icon: Building2, route: '/academy' }
   ];
 
+  // Carrega o que foi salvo de cada personagem (foto, moldura, faixa) para a
+  // entrada rápida refletir o perfil atual, não os dados fixos iniciais.
+  const mergeSaved = (character) => {
+    try {
+      const saved = localStorage.getItem(`dojoProfile_${character.id}`);
+      return saved ? { ...character, ...JSON.parse(saved) } : character;
+    } catch {
+      return character;
+    }
+  };
+
+  const displayCharacters = characters.map(mergeSaved);
+
   const handleCharacterLogin = (character) => {
     // Se esse perfil já foi editado antes, carrega o que foi salvo (foto, etc.).
     const saved = localStorage.getItem(`dojoProfile_${character.id}`);
@@ -105,13 +118,13 @@ const Login = () => {
         <div>
           <label className="block text-sm font-medium mb-2">Entrada rápida (demonstração)</label>
           <div className="grid grid-cols-4 gap-2">
-            {characters.map((character) => (
+            {displayCharacters.map((character) => (
               <button
                 key={character.id}
                 onClick={() => handleCharacterLogin(character)}
                 className="flex flex-col items-center p-2 rounded-lg border border-gray-700 hover:border-red-500 hover:bg-red-500/10 transition-all"
               >
-                <ShieldProfile type={character.frame} years={character.years} size="small" />
+                <ShieldProfile type={character.frame} years={character.years} size="small" photo={character.photo} />
                 <span className="text-xs mt-2 font-medium">{character.name}</span>
                 <span className="text-[10px] text-gray-400">{character.belt}</span>
               </button>

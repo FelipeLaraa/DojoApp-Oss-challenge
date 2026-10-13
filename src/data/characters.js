@@ -1,0 +1,62 @@
+// Personagens fictícios do dojo — originais, para testes e demonstração.
+// Estrutura pensada para crescer: no futuro cada um ganha experiências,
+// expertise e histórico próprios.
+
+export const characters = [
+  {
+    id: 'felipe',
+    name: 'Felipe',
+    role: 'veteran',
+    roleLabel: 'O Veterano',
+    belt: 'Preta',
+    frame: 'black',
+    years: 18,
+    modality: 'BJJ',
+    classesAttended: 2140,
+    weight: 84,
+    height: 180,
+    bio: 'O mestre do dojo. Calmo porque não precisa provar nada.'
+  },
+  {
+    id: 'thiago',
+    name: 'Thiago',
+    role: 'prodigy',
+    roleLabel: 'O Prodígio',
+    belt: 'Roxa',
+    frame: 'coral',
+    years: 4,
+    modality: 'BJJ',
+    classesAttended: 460,
+    weight: 72,
+    height: 176,
+    bio: 'Jovem talento subindo rápido. Vence no instinto.'
+  },
+  {
+    id: 'nicole',
+    name: 'Nicole',
+    role: 'strategist',
+    roleLabel: 'A Estrategista',
+    belt: 'Marrom',
+    frame: 'white',
+    years: 9,
+    modality: 'BJJ',
+    classesAttended: 1120,
+    weight: 63,
+    height: 168,
+    bio: 'A mente técnica. Não é a mais forte, é a que lê o jogo.'
+  },
+  {
+    id: 'ciclano',
+    name: 'Ciclano',
+    role: 'beginner',
+    roleLabel: 'O Iniciante',
+    belt: 'Branca',
+    frame: 'black',
+    years: 1,
+    modality: 'BJJ',
+    classesAttended: 38,
+    weight: 78,
+    height: 175,
+    bio: 'Começando do zero, com garra e fome de evoluir.'
+  }
+];

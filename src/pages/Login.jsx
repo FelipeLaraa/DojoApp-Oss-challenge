@@ -5,6 +5,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 import { User, GraduationCap, Building2 } from 'lucide-react';
+import { characters } from '@/data/characters';
+import ShieldProfile from '@/components/ShieldProfile';
 
 const Login = () => {
   const [selectedType, setSelectedType] = useState('');
@@ -18,6 +20,31 @@ const Login = () => {
     { id: 'teacher', label: 'Professor', icon: GraduationCap, route: '/teacher' },
     { id: 'academy', label: 'Academia', icon: Building2, route: '/academy' }
   ];
+
+  const handleCharacterLogin = (character) => {
+    const userData = {
+      id: character.id,
+      name: character.name,
+      email: `${character.id}@dojo.app`,
+      belt: character.belt,
+      frame: character.frame,
+      years: character.years,
+      weight: character.weight,
+      height: character.height,
+      modality: character.modality,
+      classesAttended: character.classesAttended,
+      bio: character.bio,
+      roleLabel: character.roleLabel,
+      progress: 20,
+      maxProgress: 60
+    };
+    login(userData, 'student');
+    navigate('/student');
+    toast({
+      title: `Bem-vindo, ${character.name}!`,
+      description: character.roleLabel
+    });
+  };
 
   const handleLogin = () => {
     if (!selectedType || !email || !password) {
@@ -73,6 +100,29 @@ const Login = () => {
         transition={{ duration: 0.6, delay: 0.2 }}
         className="space-y-6"
       >
+        <div>
+          <label className="block text-sm font-medium mb-2">Entrada rápida (demonstração)</label>
+          <div className="grid grid-cols-4 gap-2">
+            {characters.map((character) => (
+              <button
+                key={character.id}
+                onClick={() => handleCharacterLogin(character)}
+                className="flex flex-col items-center p-2 rounded-lg border border-gray-700 hover:border-red-500 hover:bg-red-500/10 transition-all"
+              >
+                <ShieldProfile type={character.frame} years={character.years} size="small" />
+                <span className="text-xs mt-2 font-medium">{character.name}</span>
+                <span className="text-[10px] text-gray-400">{character.belt}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="flex-1 h-px bg-gray-700"></div>
+          <span className="text-xs text-gray-500">ou entre manualmente</span>
+          <div className="flex-1 h-px bg-gray-700"></div>
+        </div>
+
         <div>
           <label className="block text-sm font-medium mb-2">Tipo de Usuário</label>
           <div className="grid grid-cols-3 gap-3">

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { Edit, Trophy, Calendar, Star, LogOut } from 'lucide-react';
@@ -16,6 +16,18 @@ const Profile = () => {
   const [height, setHeight] = useState(user?.height || '');
   const [belt, setBelt] = useState(user?.belt || 'Branca');
   const [photo, setPhoto] = useState(user?.photo || null);
+
+  // Re-sincroniza os campos quando o usuário carrega do armazenamento.
+  useEffect(() => {
+    if (!user) return;
+    setSelectedFrame(user.frame || 'black');
+    setName(user.name || '');
+    setEmail(user.email || '');
+    setWeight(user.weight || '');
+    setHeight(user.height || '');
+    setBelt(user.belt || 'Branca');
+    setPhoto(user.photo || null);
+  }, [user]);
 
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];

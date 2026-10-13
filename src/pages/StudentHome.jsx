@@ -9,7 +9,7 @@ import ShieldProfile from '@/components/ShieldProfile';
 import ProgressBar from '@/components/ProgressBar';
 import { characters } from '@/data/characters';
 import { readActivities, computeStreak, weekTrained } from '@/lib/activity';
-import { reactionCounts, bumpReaction } from '@/lib/reactions';
+import { reactionCounts, bumpReaction, sentToday, canReact, recordSent, LIMITS } from '@/lib/reactions';
 
 // Recência fictícia por enquanto — vira real quando houver registro de treino.
 const recency = { nicole: 'há 3 h', thiago: 'há 1 dia', felipe: 'há 6 h', ciclano: 'há 5 dias' };
@@ -51,19 +51,27 @@ const WeekStrip = ({ days = [] }) => {
   );
 };
 
-const ReactionRow = ({ onReact, counts }) => (
+const ReactionRow = ({ onReact, counts, sent }) => (
   <div className="flex gap-2 mt-3">
-    {REACTIONS.map((r) => (
-      <button
-        key={r.id}
-        onClick={() => onReact(r.id)}
-        className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg border border-gray-700 hover:border-red-500 hover:bg-white/5 transition-all text-sm"
-      >
-        <r.icon className={`w-4 h-4 ${r.color}`} />
-        {r.label}
-        {counts && <span className="text-xs text-gray-400">{counts[r.id] ?? 0}</span>}
-      </button>
-    ))}
+    {REACTIONS.map((r) => {
+      const maxed = (sent?.[r.id] ?? 0) >= LIMITS[r.id];
+      return (
+        <button
+          key={r.id}
+          onClick={() => onReact(r.id)}
+          disabled={maxed}
+          className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg border transition-all text-sm ${
+            maxed
+              ? 'border-gray-800 opacity-40 cursor-not-allowed'
+              : 'border-gray-700 hover:border-red-500 hover:bg-white/5'
+          }`}
+        >
+          <r.icon className={`w-4 h-4 ${r.color}`} />
+          {r.label}
+          {counts && <span className="text-xs text-gray-400">{counts[r.id] ?? 0}</span>}
+        </button>
+      );
+    })}
   </div>
 );
 
@@ -109,6 +117,11 @@ const StudentHome = () => {
   };
 
   const sendQuick = (friend, item) => {
+    if (!canReact(user?.id, friend.id, item)) {
+      toast({ title: 'Limite de hoje atingido', description: 'Essa reação volta amanhã.' });
+      return;
+    }
+    recordSent(user?.id, friend.id, item);
     bumpReaction(friend.id, item);
     sendTo(friend.id, friend.name, item);
   };
@@ -260,7 +273,7 @@ const StudentHome = () => {
                     <WeekStrip days={f.week} />
                   </div>
                 </div>
-                <ReactionRow counts={reactionCounts(f)} onReact={(item) => sendQuick(f, item)} />
+                <ReactionRow counts={reactionCounts(f)} sent={sentToday(user?.id, f.id)} onReact={(item) => sendQuick(f, item)} />
               </div>
             ))}
           </div>
@@ -286,7 +299,7 @@ const StudentHome = () => {
                   <WeekStrip days={f.week} />
                 </div>
               </div>
-              <ReactionRow counts={reactionCounts(f)} onReact={(item) => sendQuick(f, item)} />
+              <ReactionRow counts={reactionCounts(f)} sent={sentToday(user?.id, f.id)} onReact={(item) => sendQuick(f, item)} />
             </div>
           ))}
         </div>

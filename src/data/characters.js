@@ -20,6 +20,7 @@ export const characters = [
     bio: 'O mestre do dojo. Calmo porque não precisa provar nada.',
     emblem: 'grapple',
     streak: 42,
+    week: [true, true, true, true, true, true, true],
     activity: { headline: 'Determinado', detail: '4 dias na semana com check-in' }
   },
   {
@@ -39,6 +40,7 @@ export const characters = [
     bio: 'Jovem talento subindo rápido. Vence no instinto.',
     emblem: 'grapple',
     streak: 12,
+    week: [false, true, true, false, true, true, false],
     activity: { headline: 'Eclético', detail: '3 modalidades diferentes este mês' }
   },
   {
@@ -58,6 +60,7 @@ export const characters = [
     bio: 'A mente técnica. Não é a mais forte, é a que lê o jogo.',
     emblem: 'run',
     streak: 23,
+    week: [true, true, false, true, true, true, true],
     activity: { headline: '50 km', detail: 'percorridos este mês' }
   },
   {
@@ -77,6 +80,7 @@ export const characters = [
     bio: 'Começando do zero, com garra e fome de evoluir.',
     emblem: 'lift',
     streak: 0,
+    week: [false, true, false, false, false, false, false],
     activity: { headline: 'Inativo', detail: 'sem treinos recentes', inactive: true }
   }
 ];

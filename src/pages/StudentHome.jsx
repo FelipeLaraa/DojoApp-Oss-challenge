@@ -8,7 +8,7 @@ import { toast } from '@/components/ui/use-toast';
 import ShieldProfile from '@/components/ShieldProfile';
 import ProgressBar from '@/components/ProgressBar';
 import { characters } from '@/data/characters';
-import { readActivities, computeStreak } from '@/lib/activity';
+import { readActivities, computeStreak, weekTrained } from '@/lib/activity';
 
 // Recência fictícia por enquanto — vira real quando houver registro de treino.
 const recency = { nicole: 'há 3 h', thiago: 'há 1 dia', felipe: 'há 6 h', ciclano: 'há 5 dias' };
@@ -27,6 +27,27 @@ const mergeSaved = (character) => {
   } catch {
     return character;
   }
+};
+
+// Tira de frequência dos últimos 7 dias (bolinhas) + contagem da semana.
+// O último ponto é hoje (destacado).
+const WeekStrip = ({ days = [] }) => {
+  const count = days.filter(Boolean).length;
+  return (
+    <div className="flex items-center gap-2 mt-1.5">
+      <div className="flex gap-1">
+        {days.map((d, i) => (
+          <span
+            key={i}
+            className={`w-2.5 h-2.5 rounded-full ${d ? 'bg-orange-400' : 'bg-gray-700'} ${
+              i === days.length - 1 ? 'ring-1 ring-white/50' : ''
+            }`}
+          />
+        ))}
+      </div>
+      <span className="text-xs text-gray-400">{count}x esta semana</span>
+    </div>
+  );
 };
 
 const ReactionRow = ({ onReact }) => (
@@ -91,7 +112,9 @@ const StudentHome = () => {
   const senderIdOf = (n) =>
     n.fromId || characters.find((c) => c.name.toLowerCase() === (n.from || '').toLowerCase())?.id;
 
-  const streak = computeStreak(readActivities(user?.id));
+  const myActivities = readActivities(user?.id);
+  const streak = computeStreak(myActivities);
+  const myWeek = weekTrained(myActivities);
 
   const handleRegister = () => navigate('/register');
 
@@ -201,6 +224,7 @@ const StudentHome = () => {
                   ? `${streak} ${streak === 1 ? 'dia' : 'dias'} de sequência`
                   : 'Sem sequência ainda'}
               </p>
+              <WeekStrip days={myWeek} />
             </div>
             <Button onClick={handleRegister} className="dojo-button flex items-center gap-2">
               <Plus className="w-4 h-4" />
@@ -228,6 +252,7 @@ const StudentHome = () => {
                   <div className="flex-1">
                     <h4 className="font-semibold">{f.name}</h4>
                     <p className="text-xs text-gray-500">{f.activity.detail} • {recency[f.id] || 'faz tempo'}</p>
+                    <WeekStrip days={f.week} />
                   </div>
                 </div>
                 <ReactionRow onReact={(item) => sendQuick(f, item)} />
@@ -253,6 +278,7 @@ const StudentHome = () => {
                     {f.name} <span className="text-red-400 font-normal">{f.activity?.headline}</span>
                   </h4>
                   <p className="text-xs text-gray-400">{f.activity?.detail} • {recency[f.id] || 'recente'}</p>
+                  <WeekStrip days={f.week} />
                 </div>
               </div>
               <ReactionRow onReact={(item) => sendQuick(f, item)} />

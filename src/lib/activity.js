@@ -70,6 +70,19 @@ export const computeStreak = (activities) => {
   return streak;
 };
 
+// Últimos n dias (mais antigo → hoje): true em cada dia com pelo menos um treino.
+// Alimenta a tira de frequência da Home.
+export const weekTrained = (activities, n = 7) => {
+  const days = new Set((activities || []).map((a) => dayKey(a.date)));
+  const out = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    out.push(days.has(dayKey(d)));
+  }
+  return out;
+};
+
 export const trainedToday = (activities) => {
   if (!activities || activities.length === 0) return false;
   const today = dayKey(new Date());

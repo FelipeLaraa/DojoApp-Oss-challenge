@@ -53,6 +53,17 @@ Dados fixos que viram reais quando houver "Registrar atividade": status
   `npm run build` antes de commitar pra validar. Sem testes automatizados agora.
 - Mudanças incrementais e verificáveis. Nada de reconstruir tudo por uma tela.
 
+## Indicador visual do modo caveman
+
+Quando o modo caveman (skill `caveman`) estiver ativo, o agente começa cada
+resposta com um 🪨 em uma linha isolada no topo. Em modo normal, nada. Serve
+como "LED" pro Felipe saber visualmente, sem precisar perguntar.
+
+Isso vale como marcador funcional (não decorativo), uma única linha, sem texto
+junto — não é um prefixo tipo "Caveman:" (que a skill proíbe), apenas um
+indicador discreto no topo. Fora dessa linha, todas as regras da skill valem
+como escritas.
+
 ## Agentes
 
 - Renan Nagami (.claude/agents/renan-nagami.md): desenvolvedor. Técnico,

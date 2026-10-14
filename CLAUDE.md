@@ -33,13 +33,23 @@ Telas funcionando:
   Ordem: foto, informações/bio, molduras, progresso, estatísticas, salvar.
 - Amigos: feed dos amigos com status, enviar incentivo (item + mensagem), perfil
   público do atleta (/athlete/:id), notificações recebidas.
-- Home (feed social): seu resumo + botão Registrar (placeholder), "Precisa de um
-  empurrão" (inativos), feed de atividade dos amigos. 3 reações de 1 toque
-  (Fogo/Força/Cutucar). Sininho de notificações com badge + responder/devolver.
+- Registrar treino (/register): botão de 1 toque "Treinei hoje" + detalhes
+  opcionais (modalidade, duração, nota). Grava em dojoActivities_<id> e alimenta
+  a sequência (streak). Foto do treino ainda é placeholder ("em breve").
+- Home (feed social): seu resumo com sequência real + tira de frequência dos
+  últimos 7 dias + botão Registrar (abre /register), "Precisa de um empurrão"
+  (inativos), feed de atividade dos amigos. 3 reações de 1 toque
+  (Fogo/Força/Cutucar) com limite diário por amigo e contador local.
+  Sininho de notificações com badge + responder/devolver.
+- Ranking: só amigos, ordenado por frequência semanal (desempate pela
+  sequência). Seus dados são reais; os dos amigos vêm fixos de characters.js.
 - Navegação: lateral no desktop, inferior no mobile. Aba Amigos incluída.
 
-Dados fixos que viram reais quando houver "Registrar atividade": status
-(50 km, 4 dias, etc.), tempos ("há 3 h"), estatísticas do perfil.
+Já real (vem de "Registrar treino"): sequência, tira de frequência e posição
+no Ranking do usuário logado. Ainda fixo: status dos amigos (50 km, 4 dias,
+etc.), tempos no feed ("há 3 h"), estatísticas do perfil (47 aulas, #12) e a
+barra "20/60 aulas" da Home. Telas herdadas do app-academia (Agenda, Check-in,
+Home de professor/academia) ainda existem no código, sem foco atual.
 
 ## Modo de trabalho (combinado com o Felipe)
 
@@ -75,7 +85,9 @@ como escritas.
 
 ## Próximos passos
 
-1. Registrar atividade — torna os status e tempos reais (destrava a gamificação).
+1. Enriquecer a Home em cima do Registrar treino já pronto (detalhes no
+   HANDOFF.md): trocar "20/60 aulas" por meta semanal, "✓ hoje" nos amigos,
+   marcos de sequência.
 2. Agente designer — cara premium depois do núcleo pronto.
 3. Backend (Supabase) — login real, dados multi-aparelho; aí entram os revisores.
 

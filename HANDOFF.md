@@ -78,10 +78,65 @@ real só com backend (Supabase), que é um passo futuro.
 
 ## Próximos passos
 
-1. Registrar atividade — torna status, tempos e estatísticas reais.
-2. Agente designer (contestador criativo) — cara premium.
-3. Backend (Supabase) — login real e dados multi-aparelho; aí entram os agentes
-   revisores (code-reviewer, security-auditor).
+### Curto prazo — enriquecer a Home (o Felipe pediu, 13/10/2026)
+
+A Home ganhou peças importantes (streak, tira de frequência, contador de
+reações com limite), mas ainda está simples. Sugestões, por impacto × esforço:
+
+A. REMOVER / SUBSTITUIR a "20/60 aulas · 33%" do resumo
+   É resquício do app-academia antigo. Hoje confunde — "aulas" não faz sentido
+   num hub genérico. Opções: substituir por "meta da semana" (ex: 4 treinos,
+   1/4 ✓) OU remover até existir meta real.
+
+B. "Treinou hoje?" em destaque no resumo
+   Antes do treino de hoje: botão grande "Treinei hoje" direto no resumo.
+   Depois do treino: "✓ Treino de hoje · há Xh · Natação" como memória.
+   Pequeno, muda MUITO a sensação de uso diário.
+
+C. Selo "✓ hoje" nos amigos que treinaram no dia
+   Prova social forte. Olhar na Home e ver quem já se mexeu puxa a sua vez.
+
+D. Marcos de sequência celebrados
+   7 / 14 / 30 / 100 dias ganham badge visual (brilho, confete, cor especial)
+   em vez de só mudar o número do hit. Hoje 1 e 42 têm "o mesmo peso visual".
+
+E. "Último treino" no resumo
+   Linha curta: "último: há 2h · Natação · 45 min". Transforma o registro em
+   memória viva, não só número que subiu.
+
+F. Hierarquia no feed
+   Quem bateu marco hoje aparece no topo com destaque. Quem está em alta
+   (streak subindo) ganha ênfase. Hoje tudo tem o mesmo peso.
+
+G. Perfil público do atleta (/athlete/:id) ganha a tira de frequência
+   Já aparece na Home e Ranking. Falta esse último lugar.
+
+### Médio prazo
+
+H. Sistema de metas semanais/mensais
+   "Sua meta: 4 treinos esta semana · 1/4 ✓". Alimenta uma barra de
+   progressão REAL (substitui a de "aulas" chumbada). Combustível do motor
+   Duolingo.
+
+I. Ideia guardada: moldura reage à ausência
+   Moldura esfria/apaga quando o usuário fica tempo sem treinar e esquenta ao
+   voltar. Liga visualmente com o streak. Conversamos sobre isso em 13/10;
+   encaixa depois do loop registro+streak estar bem assentado.
+
+J. Agente DESIGNER (contestador criativo, cara premium)
+   Já previsto no CLAUDE.md. Com a Home esticada, é a hora dele passar o olho
+   crítico (cores, tipografia, hierarquia visual, conceito). Mandato de
+   discordar; não é "fazer bonito", é desafiar escolhas.
+
+### Longo prazo
+
+K. Backend (Supabase) — destrava quase tudo que hoje é "demo"
+   - Login real multi-aparelho (hoje perde ao trocar de celular)
+   - Foto do treino (hoje é placeholder "em breve")
+   - Contador de reações compartilhado de verdade (hoje é local)
+   - Dados reais de amigos (hoje são fixos em characters.js)
+   - Entrada dos agentes code-reviewer e security-auditor
+   É um salto grande. Não é pra amanhã, mas é o próximo horizonte real.
 
 ## Como continuar
 

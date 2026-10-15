@@ -56,21 +56,6 @@ const compressImage = (file) =>
 
 const SPORTS = ['BJJ', 'Wrestling', 'Corrida', 'Musculação', 'Boxe', 'Luta livre', 'Natação'];
 
-const BJJ_POSITIONS = [
-  'Guarda aranha',
-  'Berimbolo',
-  'Triângulo',
-  'Meia-guarda',
-  '50/50',
-  'Armlock',
-  'Omoplata',
-  'Rear naked choke',
-  'Mata-leão',
-  'Kimura',
-  'Passagem de guarda',
-  'Montada'
-];
-
 const MOODS = [
   { key: 'exausto', emoji: '😮‍💨', label: 'exausto' },
   { key: 'sofreu', emoji: '😤', label: 'sofreu' },
@@ -124,7 +109,6 @@ const RegisterActivity = () => {
   const [duration, setDuration] = useState('');
   const [local, setLocal] = useState('');
   const [mood, setMood] = useState(null);
-  const [positions, setPositions] = useState([]);
   const [partnerName, setPartnerName] = useState('');
   const [partnerBelt, setPartnerBelt] = useState('');
   const [rolls, setRolls] = useState(0);
@@ -133,9 +117,6 @@ const RegisterActivity = () => {
   const [note, setNote] = useState('');
   const [photo, setPhoto] = useState(null);
   const fileInputRef = useRef(null);
-
-  const togglePosition = (p) =>
-    setPositions((prev) => (prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p]));
 
   const isBJJ = sport === 'BJJ';
 
@@ -160,7 +141,6 @@ const RegisterActivity = () => {
       photo,
       local: local || null,
       mood,
-      positions: isBJJ ? positions : null,
       partner: isBJJ && partnerName ? { name: partnerName, belt: partnerBelt || null } : null,
       rolls: isBJJ ? rolls : null,
       submissions: isBJJ ? submissions : null,
@@ -391,23 +371,6 @@ const RegisterActivity = () => {
             <div className="flex items-center justify-between">
               <div className="section-label">Técnico · BJJ</div>
               <div className="text-[10px] text-neutral-500">o que você treinou</div>
-            </div>
-
-            {/* Posições */}
-            <div>
-              <div className="text-xs text-neutral-400 mb-2">Posições / golpes trabalhados</div>
-              <div className="flex flex-wrap gap-2">
-                {BJJ_POSITIONS.map((p) => (
-                  <button
-                    key={p}
-                    type="button"
-                    onClick={() => togglePosition(p)}
-                    className={`chip ${positions.includes(p) ? 'on' : ''}`}
-                  >
-                    {p}
-                  </button>
-                ))}
-              </div>
             </div>
 
             {/* Parceiro */}

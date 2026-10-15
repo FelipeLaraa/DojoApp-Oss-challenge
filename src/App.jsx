@@ -8,7 +8,6 @@ import StudentHome from '@/pages/StudentHome';
 import TeacherHome from '@/pages/TeacherHome';
 import AcademyHome from '@/pages/AcademyHome';
 import Schedule from '@/pages/Schedule';
-import CheckIn from '@/pages/CheckIn';
 import TeacherChecklist from '@/pages/TeacherChecklist';
 import Profile from '@/pages/Profile';
 import RegisterActivity from '@/pages/RegisterActivity';
@@ -33,7 +32,6 @@ function App() {
             <Route path="/teacher" element={<TeacherHome />} />
             <Route path="/academy" element={<AcademyHome />} />
             <Route path="/schedule" element={<Schedule />} />
-            <Route path="/checkin" element={<CheckIn />} />
             <Route path="/teacher-checklist/:classId" element={<TeacherChecklist />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/register" element={<RegisterActivity />} />

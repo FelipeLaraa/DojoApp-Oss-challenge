@@ -1,16 +1,19 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Flame, Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Flame, Check } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import ShieldProfile from '@/components/ShieldProfile';
-import ProgressBar from '@/components/ProgressBar';
 import WeekStrip from '@/components/WeekStrip';
-import { readActivities, computeStreak, weekTrained } from '@/lib/activity';
+import {
+  readActivities,
+  computeStreak,
+  weekTrained,
+  trainedToday as didTrainToday
+} from '@/lib/activity';
+import { relativeTime } from '@/lib/time';
 
-// User's own summary card: shield + name + streak + register button + week strip
-// + progression bar. Reads the user's own activity for streak and weekly count.
-// Visual intentionally unchanged in this etapa.
+// Hero da Home. Escudo grande, chip "sua vez hoje" (quando ainda não treinou),
+// CTA gigante (coral antes, verde depois) e resumo em 3 colunas.
 const TodaySection = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -18,39 +21,119 @@ const TodaySection = () => {
   const myActivities = readActivities(user?.id);
   const streak = computeStreak(myActivities);
   const myWeek = weekTrained(myActivities);
+  const weekCount = myWeek.filter(Boolean).length;
+  const trained = didTrainToday(myActivities);
+  const latest = myActivities[0];
 
   const handleRegister = () => navigate('/register');
 
+  // "Último" (antes do treino) vs "Hoje" (depois do treino).
+  let lastLabel = 'Último';
+  let lastValue = 'faz dias';
+  if (trained) {
+    lastLabel = 'Hoje';
+    lastValue = latest?.durationMin ? `${latest.durationMin} min` : 'registrado';
+  } else if (latest?.date) {
+    lastValue = relativeTime(latest.date);
+  }
+
+  const belt = user?.belt ? `faixa ${String(user.belt).toLowerCase()}` : null;
+  const subtitle = [user?.mainSport || 'BJJ', belt].filter(Boolean).join(' · ');
+
   return (
-    <div className="dojo-card p-4">
-      <div className="flex items-center gap-4">
+    <section className="flex flex-col items-center">
+      {/* Hero: escudo grande */}
+      <div className="pt-2 pb-2">
         <ShieldProfile
           type={user?.frame || 'black'}
           emblem={user?.emblem}
-          hit={streak}
-          size="small"
+          size="xl"
           photo={user?.photo}
+          hit={streak > 0 ? streak : null}
+          pulseIfMissing
+          trainedToday={trained}
         />
-        <div className="flex-1">
-          <h2 className="text-lg font-bold">Olá, {user?.name}!</h2>
-          <p className="text-sm text-gray-400">{user?.mainSport || 'BJJ'}</p>
-          <p className="text-sm font-semibold flex items-center gap-1 mt-0.5">
-            <Flame className={`w-4 h-4 ${streak > 0 ? 'text-orange-400' : 'text-gray-600'}`} />
-            {streak > 0
-              ? `${streak} ${streak === 1 ? 'dia' : 'dias'} de sequência`
-              : 'Sem sequência ainda'}
-          </p>
-          <WeekStrip days={myWeek} />
+      </div>
+
+      <h2 className="mt-5 text-2xl font-extrabold tracking-tight">{user?.name}</h2>
+      <p className="mt-1 text-sm text-gray-400">{subtitle}</p>
+
+      {/* Chip "sua vez" — só aparece se ainda não treinou hoje */}
+      {!trained && (
+        <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#ff6b4a]/10 text-[#ff6b4a] text-xs font-bold tracking-wide">
+          <span className="relative flex w-1.5 h-1.5">
+            <span className="absolute inline-flex w-full h-full rounded-full bg-[#ff6b4a] opacity-75 animate-ping" />
+            <span className="relative inline-flex w-1.5 h-1.5 rounded-full bg-[#ff6b4a]" />
+          </span>
+          Sua vez hoje — não perca a sequência
         </div>
-        <Button onClick={handleRegister} className="dojo-button flex items-center gap-2">
-          <Plus className="w-4 h-4" />
-          Registrar
-        </Button>
+      )}
+
+      {/* CTA gigante */}
+      <div className="w-full px-1 mt-5">
+        <button
+          onClick={handleRegister}
+          className={`w-full rounded-2xl py-5 px-5 font-extrabold text-lg flex items-center justify-center gap-2 tracking-tight text-white transition-transform active:scale-[.98] ${
+            trained
+              ? 'bg-gradient-to-br from-[#2ec27a] to-[#1b8a52] shadow-[0_10px_24px_rgba(46,194,122,0.3)]'
+              : 'bg-gradient-to-br from-[#ff6b4a] to-[#ff4d2e] shadow-[0_14px_30px_rgba(255,77,46,0.4)]'
+          }`}
+        >
+          {trained ? (
+            <>
+              <span className="w-6 h-6 rounded-full bg-white/20 inline-flex items-center justify-center">
+                <Check className="w-3.5 h-3.5" />
+              </span>
+              <span>Treinei hoje</span>
+              <span className="opacity-80 font-semibold text-base">
+                · {relativeTime(latest?.date)}
+                {latest?.sport ? ` · ${latest.sport}` : ''}
+              </span>
+            </>
+          ) : (
+            <>
+              <Flame className="w-6 h-6 drop-shadow-[0_0_6px_rgba(255,180,120,0.8)]" />
+              <span>Treinei hoje</span>
+            </>
+          )}
+        </button>
       </div>
-      <div className="mt-4">
-        <ProgressBar current={user?.progress || 20} max={user?.maxProgress || 60} label="aulas" />
+
+      {/* Resumo 3 colunas */}
+      <div className="w-full mt-5 dojo-card px-5 py-4 flex items-center justify-between gap-3">
+        <div className="flex-1">
+          <div className="text-[11px] uppercase tracking-widest text-gray-400 font-semibold">
+            Sequência
+          </div>
+          <div
+            className={`mt-0.5 text-lg font-extrabold tracking-tight ${
+              trained ? 'text-[#2ec27a]' : 'text-[#ff6b4a]'
+            }`}
+          >
+            {streak} {streak === 1 ? 'dia' : 'dias'}
+          </div>
+        </div>
+        <div className="w-px h-9 bg-white/10" />
+        <div className="flex-1">
+          <div className="text-[11px] uppercase tracking-widest text-gray-400 font-semibold">
+            Semana
+          </div>
+          <div className="mt-0.5 text-lg font-extrabold tracking-tight">{weekCount} / 7</div>
+        </div>
+        <div className="w-px h-9 bg-white/10" />
+        <div className="flex-1">
+          <div className="text-[11px] uppercase tracking-widest text-gray-400 font-semibold">
+            {lastLabel}
+          </div>
+          <div className="mt-0.5 text-lg font-extrabold tracking-tight">{lastValue}</div>
+        </div>
       </div>
-    </div>
+
+      {/* Tira semanal (stories entram no próximo commit) */}
+      <div className="w-full mt-4 flex justify-center">
+        <WeekStrip days={myWeek} showLabels />
+      </div>
+    </section>
   );
 };
 

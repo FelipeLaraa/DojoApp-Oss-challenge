@@ -28,11 +28,20 @@ export const hitColor = (hit) => {
 
 // type   = moldura (cor/estilo). emblem = selo de esporte (independente da moldura).
 // hit    = sequência de treinos; mostra o selo colorido. null/undefined = sem selo.
-const ShieldProfile = ({ type = 'black', hit = null, size = 'medium', photo = null, emblem }) => {
+const ShieldProfile = ({
+  type = 'black',
+  hit = null,
+  size = 'medium',
+  photo = null,
+  emblem,
+  pulseIfMissing = false,
+  trainedToday = true
+}) => {
   const sizeClasses = {
     small: 'w-12 h-12',
     medium: 'w-20 h-20',
-    large: 'w-32 h-32'
+    large: 'w-32 h-32',
+    xl: 'shield-xl'
   };
 
   const frameClasses = {
@@ -48,13 +57,15 @@ const ShieldProfile = ({ type = 'black', hit = null, size = 'medium', photo = nu
   const hitBadgeSize = {
     small: 'text-xs px-2 py-0.5',
     medium: 'text-sm px-3 py-1',
-    large: 'text-base px-4 py-1.5'
+    large: 'text-base px-4 py-1.5',
+    xl: 'text-base px-4 py-1.5'
   };
 
   const emblemSize = {
     small: 'w-7 h-7 p-1',
     medium: 'w-9 h-9 p-1.5',
-    large: 'w-12 h-12 p-2'
+    large: 'w-12 h-12 p-2',
+    xl: 'w-11 h-11 p-2'
   };
 
   // Se emblem foi passado (inclusive null para "nenhum"), ele manda. Caso
@@ -62,10 +73,11 @@ const ShieldProfile = ({ type = 'black', hit = null, size = 'medium', photo = nu
   const emblemKey = emblem !== undefined ? emblem : type;
   const emblemSvg = emblemKey ? emblems[emblemKey] : null;
   const showHit = hit !== null && hit !== undefined;
+  const pulseClass = pulseIfMissing && !trainedToday ? 'shield-pulse-missing' : '';
 
   return (
     <div className="relative inline-block">
-      <div className={`shield-frame ${frameClasses[type]} ${sizeClasses[size]} overflow-hidden`}>
+      <div className={`shield-frame ${frameClasses[type]} ${sizeClasses[size]} ${pulseClass} overflow-hidden`}>
         {photo ? (
           <img src={photo} alt="Foto do perfil" className="w-full h-full object-cover" />
         ) : (

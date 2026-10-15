@@ -277,6 +277,132 @@ body {
   box-shadow: 0 12px 32px rgba(255, 107, 107, 0.4);
 }
 
+/* =========================================================================
+   Register Activity — ritual, não formulário
+   ========================================================================= */
+
+.register-hero {
+  background:
+    radial-gradient(1200px 400px at 50% -100px, rgba(239,68,68,.35), transparent 60%),
+    radial-gradient(500px 300px at 100% 100%, rgba(249,115,22,.18), transparent 60%),
+    linear-gradient(180deg,#1a0b0d 0%,#0a0a0a 100%);
+  border-bottom: 1px solid rgba(255,255,255,.04);
+}
+
+.register-hero-grid {
+  position: absolute; inset: 0; opacity: .12;
+  background-image:
+    linear-gradient(rgba(255,255,255,.4) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.4) 1px, transparent 1px);
+  background-size: 32px 32px;
+  -webkit-mask-image: radial-gradient(ellipse at 50% 20%, #000 20%, transparent 70%);
+          mask-image: radial-gradient(ellipse at 50% 20%, #000 20%, transparent 70%);
+  pointer-events: none;
+}
+
+.flame-badge {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: radial-gradient(circle at 50% 40%, #fde68a 0%, #f97316 55%, #991b1b 100%);
+  box-shadow: 0 0 40px rgba(249,115,22,.5), inset 0 2px 6px rgba(255,255,255,.4);
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+.flame-badge::after {
+  content: ""; position: absolute; inset: -6px; border-radius: 50%;
+  background: conic-gradient(from 90deg, transparent, rgba(255,255,255,.6), transparent 60%);
+  animation: flame-spin 6s linear infinite; z-index: -1; filter: blur(2px);
+}
+@keyframes flame-spin { to { transform: rotate(360deg); } }
+
+.card {
+  background: linear-gradient(180deg, #17181b 0%, #1d1f23 100%);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 18px;
+}
+.card-tight {
+  background: #17181b;
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 14px;
+}
+
+.section-label {
+  font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+  color: #8a8d94; font-weight: 600;
+}
+
+/* Chips */
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 12px; border-radius: 999px;
+  background: #17181b; border: 1px solid rgba(255,255,255,.12);
+  font-size: 13px; color: #f5f5f6;
+  transition: all .15s ease;
+  cursor: pointer;
+}
+.chip:hover { border-color: rgba(255,255,255,.2); }
+.chip.on {
+  background: linear-gradient(180deg,#2a1013,#1a0a0b);
+  border-color: rgba(239,68,68,.5);
+  color: #fecaca;
+  box-shadow: 0 0 0 1px rgba(239,68,68,.25), 0 6px 16px -8px rgba(239,68,68,.5);
+}
+
+/* Mood tiles */
+.mood-tile {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 10px 0; border-radius: 12px;
+  background: #17181b; border: 1px solid rgba(255,255,255,.06);
+  font-size: 10px; color: #8a8d94;
+  transition: all .15s ease;
+  cursor: pointer;
+}
+.mood-tile:hover { border-color: rgba(255,255,255,.14); }
+.mood-tile.on {
+  background: linear-gradient(180deg,#1a2e1f,#0e1a13);
+  border-color: #047857; color: #a7f3d0;
+}
+.mood-emoji { font-size: 22px; line-height: 1; }
+
+/* PRO block */
+.premium { position: relative; overflow: hidden; }
+.premium-tag {
+  position: absolute; top: 14px; right: 14px;
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 700; letter-spacing: .1em;
+  padding: 4px 8px; border-radius: 999px;
+  background: linear-gradient(135deg,#eab308,#f59e0b);
+  color: #111; text-transform: uppercase;
+}
+.premium-shine {
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, transparent 40%, rgba(234,179,8,.08) 50%, transparent 60%);
+  pointer-events: none;
+}
+.lock-blur { filter: blur(2px); opacity: .55; }
+
+/* Save bar sticky — flutua acima da nav flutuante */
+.save-bar {
+  position: fixed;
+  left: 50%; transform: translateX(-50%);
+  bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+  width: calc(100% - 28px);
+  max-width: 386px;
+  padding: 0 2px;
+  z-index: 45;
+}
+.save-btn {
+  width: 100%; height: 56px; border-radius: 16px;
+  background: linear-gradient(180deg,#ef4444 0%, #b91c1c 100%);
+  color: white; font-weight: 700; font-size: 16px;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  box-shadow: 0 10px 30px -10px rgba(239,68,68,.6), inset 0 1px 0 rgba(255,255,255,.2);
+  letter-spacing: .01em;
+  border: none;
+  cursor: pointer;
+  transition: transform .15s ease;
+}
+.save-btn:active { transform: scale(.98); }
+
 /* Nav flutuante — pairando, não colada. Blur premium estilo Dynamic Island.
    Centralizada na coluna do app (max-width 414px), com margens laterais e
    inferior respeitando safe-area no iOS. */

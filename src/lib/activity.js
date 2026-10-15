@@ -39,14 +39,43 @@ export const storageUsageRatio = () => {
 };
 
 // Grava um treino. Retorna a lista atualizada (ou null se o armazenamento encheu).
-export const addActivity = (userId, { sport, durationMin, note, photo } = {}) => {
+// Campos novos (local, mood, positions, partner, rolls, submissions, caught)
+// são todos opcionais e salvam null quando vazios.
+export const addActivity = (
+  userId,
+  {
+    sport,
+    durationMin,
+    note,
+    photo,
+    local,
+    mood,
+    positions,
+    partner,
+    rolls,
+    submissions,
+    caught
+  } = {}
+) => {
   if (!userId) return null;
+  const toInt = (v) => {
+    if (v === undefined || v === null || v === '') return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  };
   const entry = {
     date: new Date().toISOString(),
     sport: sport || null,
     durationMin: durationMin ? Number(durationMin) : null,
-    note: note ? String(note).slice(0, 140) : null,
-    photo: photo || null
+    note: note ? String(note).slice(0, 240) : null,
+    photo: photo || null,
+    local: local ? String(local).slice(0, 80) : null,
+    mood: mood || null,
+    positions: Array.isArray(positions) && positions.length ? positions.slice(0, 20) : null,
+    partner: partner && partner.name ? { name: String(partner.name), belt: partner.belt || null } : null,
+    rolls: toInt(rolls),
+    submissions: toInt(submissions),
+    caught: toInt(caught)
   };
   const list = [entry, ...readActivities(userId)];
   try {

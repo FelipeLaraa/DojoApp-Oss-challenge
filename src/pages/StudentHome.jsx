@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Flame, Plus, Zap, Dumbbell, Bell, X } from 'lucide-react';
+import { Flame, Plus, Zap, Dumbbell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 import ShieldProfile from '@/components/ShieldProfile';
 import ProgressBar from '@/components/ProgressBar';
 import WeekStrip from '@/components/WeekStrip';
+import NotificationBell from '@/components/NotificationBell';
 import { characters } from '@/data/characters';
 import { readActivities, computeStreak, weekTrained } from '@/lib/activity';
 import { reactionCounts, bumpReaction, sentToday, canReact, recordSent, LIMITS } from '@/lib/reactions';
@@ -59,30 +60,10 @@ const StudentHome = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [, force] = useState(0);
-  const [showNotif, setShowNotif] = useState(false);
-
-  const seenKey = `dojoNotifSeen_${user?.id}`;
-  const [lastSeen, setLastSeen] = useState(() => {
-    try { return Number(localStorage.getItem(seenKey) || 0); } catch { return 0; }
-  });
-
-  let notifications = [];
-  try { notifications = JSON.parse(localStorage.getItem(`dojoNotifications_${user?.id}`) || '[]'); } catch {}
-  const unread = notifications.filter((n) => new Date(n.date).getTime() > lastSeen).length;
-
-  const openNotif = () => {
-    const now = Date.now();
-    setShowNotif(true);
-    setLastSeen(now);
-    try { localStorage.setItem(seenKey, String(now)); } catch {}
-  };
 
   const friends = characters.filter((c) => c.id !== user?.id).map(mergeSaved);
   const inactive = friends.filter((f) => f.activity?.inactive);
   const active = friends.filter((f) => !f.activity?.inactive);
-
-  const [replyIdx, setReplyIdx] = useState(null);
-  const [replyText, setReplyText] = useState('');
 
   const sendTo = (targetId, targetName, item, message = '') => {
     if (!targetId) return;
@@ -106,10 +87,6 @@ const StudentHome = () => {
     sendTo(friend.id, friend.name, item);
   };
 
-  // Resolve o id de quem mandou (notifs novas trazem fromId; antigas, pelo nome).
-  const senderIdOf = (n) =>
-    n.fromId || characters.find((c) => c.name.toLowerCase() === (n.from || '').toLowerCase())?.id;
-
   const myActivities = readActivities(user?.id);
   const streak = computeStreak(myActivities);
   const myWeek = weekTrained(myActivities);
@@ -123,91 +100,10 @@ const StudentHome = () => {
         animate={{ opacity: 1, y: 0 }}
         className="space-y-6"
       >
-        {/* Topo com sininho */}
-        <div className="flex items-center justify-between">
+        {/* Topo com sininho + painel de notificações */}
+        <NotificationBell userId={user?.id}>
           <h1 className="text-xl font-bold">Início</h1>
-          <button
-            onClick={() => (showNotif ? setShowNotif(false) : openNotif())}
-            className="relative p-2 rounded-full hover:bg-white/5"
-          >
-            <Bell className="w-6 h-6" />
-            {unread > 0 && (
-              <span className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
-                {unread}
-              </span>
-            )}
-          </button>
-        </div>
-
-        {/* Painel de notificações */}
-        {showNotif && (
-          <div className="dojo-card p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="font-semibold flex items-center gap-2">
-                <Bell className="w-5 h-5 text-red-500" />
-                Notificações
-              </h3>
-              <button onClick={() => setShowNotif(false)}>
-                <X className="w-5 h-5 text-gray-400 hover:text-white" />
-              </button>
-            </div>
-            {notifications.length === 0 ? (
-              <p className="text-sm text-gray-400">Nada por aqui ainda. Treine e incentive!</p>
-            ) : (
-              notifications.map((n, i) => {
-                const sid = senderIdOf(n);
-                return (
-                  <div key={i} className="text-sm bg-white/5 rounded-lg p-3">
-                    <span className="font-medium">{n.from}</span> mandou{' '}
-                    <span className="text-red-400">{n.item}</span>
-                    {n.message && <p className="text-gray-300 mt-1">"{n.message}"</p>}
-
-                    {sid && (
-                      <div className="flex gap-2 mt-2">
-                        <button
-                          onClick={() => sendTo(sid, n.from, 'Fogo')}
-                          className="flex items-center gap-1 px-2 py-1 rounded-lg border border-gray-700 hover:border-red-500 text-xs"
-                        >
-                          <Flame className="w-3.5 h-3.5 text-orange-400" />
-                          Devolver fogo
-                        </button>
-                        <button
-                          onClick={() => { setReplyIdx(replyIdx === i ? null : i); setReplyText(''); }}
-                          className="px-2 py-1 rounded-lg border border-gray-700 hover:border-red-500 text-xs"
-                        >
-                          Responder
-                        </button>
-                      </div>
-                    )}
-
-                    {replyIdx === i && (
-                      <div className="flex gap-2 mt-2">
-                        <input
-                          type="text"
-                          value={replyText}
-                          onChange={(e) => setReplyText(e.target.value)}
-                          placeholder="Responder..."
-                          className="flex-1 p-2 rounded-lg bg-gray-800 border border-gray-600 focus:border-red-500 focus:outline-none text-xs"
-                        />
-                        <button
-                          onClick={() => {
-                            if (!replyText.trim()) return;
-                            sendTo(sid, n.from, 'Resposta', replyText.trim());
-                            setReplyIdx(null);
-                            setReplyText('');
-                          }}
-                          className="px-3 py-1 rounded-lg dojo-button text-xs"
-                        >
-                          Enviar
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                );
-              })
-            )}
-          </div>
-        )}
+        </NotificationBell>
 
         {/* Seu resumo */}
         <div className="dojo-card p-4">

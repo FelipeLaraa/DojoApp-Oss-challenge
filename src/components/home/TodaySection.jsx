@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Flame, Check } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import ShieldProfile from '@/components/ShieldProfile';
-import WeekStrip from '@/components/WeekStrip';
+import WeekStories from '@/components/WeekStories';
 import {
   readActivities,
   computeStreak,
@@ -20,8 +20,7 @@ const TodaySection = () => {
 
   const myActivities = readActivities(user?.id);
   const streak = computeStreak(myActivities);
-  const myWeek = weekTrained(myActivities);
-  const weekCount = myWeek.filter(Boolean).length;
+  const weekCount = weekTrained(myActivities).filter(Boolean).length;
   const trained = didTrainToday(myActivities);
   const latest = myActivities[0];
 
@@ -129,9 +128,9 @@ const TodaySection = () => {
         </div>
       </div>
 
-      {/* Tira semanal (stories entram no próximo commit) */}
-      <div className="w-full mt-4 flex justify-center">
-        <WeekStrip days={myWeek} showLabels />
+      {/* Stories semanais */}
+      <div className="w-full mt-5">
+        <WeekStories activities={myActivities} user={user} trainedToday={trained} />
       </div>
     </section>
   );

@@ -31,9 +31,35 @@ Referências. Puxa paralelos específicos: "isso tem cara de Instagram 2015",
 default". Fontes principais, por peso:
 - Strava — uso diário e comprobatório. Sua referência mais pesada.
 - Gym Rats — competitivo, intuitivo, utilizável. Hierarquia simples.
-- Instagram — só pra formatos de UI pontuais (stories, dropdowns, chips),
-  nunca pro tom social (o DojoApp rejeita vaidade — ver CLAUDE.md).
+- Instagram — SIM pra formatos de UI familiares (stories circulares,
+  dropdowns, chips, carrosséis). O usuário conhece esses padrões e quer
+  conforto de reconhecimento. NÃO pro tom (ver "Visão do produto" abaixo).
 - Duolingo — baixa influência. Só quando o motor de hábito/sequência pedir.
+
+## Visão do produto (não negociável)
+
+O DojoApp precisa gerar **ansiedade boa de postar o próximo treino** — a
+mesma sensação de "quero marcar presença" que o Duolingo faz com a chama e
+o Strava com os kudos. Toda entrada no app e todo registro de treino tem
+que **entregar alguma recompensa visual** (micro-animação, selo, mudança
+de cor da moldura, hit subindo com peso).
+
+O que PEGAMOS do Instagram:
+- Formato familiar (stories circulares no topo, dropdown de contexto,
+  cards de feed) — o usuário já sabe navegar. É conforto, não imitação.
+- Densidade visual alta — nada de telas vazias.
+
+O que REJEITAMOS do Instagram (e o Felipe é taxativo nisso):
+- Vaidade — fotos editadas, poses, palco. Nossos "stories" são só de
+  TREINO (prova de hábito), nunca de corpo/vida/jantar.
+- Aleatoriedade do feed infinito — a Home mostra pessoas que o usuário
+  escolheu seguir, nunca "sugestões" injetadas.
+- Anúncios no meio do conteúdo.
+- Curtidas-vaidade. Reações aqui são incentivo entre amigos próximos
+  (Fogo/Força/Cutucar), não métrica social.
+
+Teste de cheiro antes de desenhar qualquer coisa: "isso serve pro cara
+provar o hábito dele ou pro cara aparecer?". Se é aparecer, corte.
 
 Mostra, não descreve. Prefere mockup em HTML/SVG a parágrafo. Economia de
 token embutida: ver > ler.

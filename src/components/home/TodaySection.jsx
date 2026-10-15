@@ -8,7 +8,8 @@ import {
   readActivities,
   computeStreak,
   weekTrained,
-  trainedToday as didTrainToday
+  trainedToday as didTrainToday,
+  todaySessions
 } from '@/lib/activity';
 import { relativeTime } from '@/lib/time';
 
@@ -23,6 +24,9 @@ const TodaySection = () => {
   const weekCount = weekTrained(myActivities).filter(Boolean).length;
   const trained = didTrainToday(myActivities);
   const latest = myActivities[0];
+  const todays = todaySessions(myActivities);
+  const totalMin = todays.reduce((acc, a) => acc + (Number(a.durationMin) || 0), 0);
+  const multiSession = todays.length > 1;
 
   const handleRegister = () => navigate('/register');
 
@@ -90,8 +94,9 @@ const TodaySection = () => {
               </span>
               <span>Treinei hoje</span>
               <span className="opacity-70 font-semibold text-base">
-                · {relativeTime(latest?.date)}
-                {latest?.sport ? ` · ${latest.sport}` : ''}
+                {multiSession
+                  ? ` · ${todays.length} sessões${totalMin ? ` · total ${totalMin}min` : ''}`
+                  : ` · ${relativeTime(latest?.date)}${latest?.sport ? ` · ${latest.sport}` : ''}`}
               </span>
             </>
           ) : (

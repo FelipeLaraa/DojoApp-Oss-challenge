@@ -129,6 +129,14 @@ export const weekTrained = (activities, n = 7) => {
   return out;
 };
 
+// Todas as sessões cujo dia local bate com "hoje". Pode retornar vazio.
+// Usado pra agregar visualmente múltiplos registros do mesmo dia.
+export const todaySessions = (activities) => {
+  if (!activities || activities.length === 0) return [];
+  const today = dayKey(new Date());
+  return activities.filter((a) => dayKey(a.date) === today);
+};
+
 export const trainedToday = (activities) => {
   if (!activities || activities.length === 0) return false;
   const today = dayKey(new Date());

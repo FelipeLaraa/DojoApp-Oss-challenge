@@ -20,8 +20,10 @@ import {
   readActivities,
   computeStreak,
   trainedToday,
+  todaySessions,
   storageUsageRatio
 } from '@/lib/activity';
+import { relativeTime } from '@/lib/time';
 
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MB
 const MAX_SIDE = 800;
@@ -113,6 +115,8 @@ const RegisterActivity = () => {
   const existing = readActivities(user?.id);
   const streak = useMemo(() => computeStreak(existing), [existing]);
   const doneToday = useMemo(() => trainedToday(existing), [existing]);
+  const todays = useMemo(() => todaySessions(existing), [existing]);
+  const todayTotalMin = todays.reduce((acc, a) => acc + (Number(a.durationMin) || 0), 0);
   const targetDay = streak + (doneToday ? 0 : 1); // "dia N" a aparecer no CTA após salvar
   const milestone = nextMilestone(streak);
 
@@ -218,6 +222,40 @@ const RegisterActivity = () => {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
       >
+        {/* Card discreto: sessões já registradas hoje */}
+        {todays.length >= 1 && (
+          <div className="px-5 pt-5">
+            <div className="card-tight p-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-neutral-500">
+                    Hoje
+                  </div>
+                  <div className="text-sm font-semibold text-white mt-0.5">
+                    {todays.length} {todays.length === 1 ? 'sessão' : 'sessões'}
+                    {todayTotalMin ? ` · total ${todayTotalMin}min` : ''}
+                  </div>
+                </div>
+                <div className="text-[11px] text-emerald-400 font-semibold">✓ dia garantido</div>
+              </div>
+              <div className="mt-2 flex flex-col gap-1">
+                {todays.map((a, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center justify-between text-[11px] text-neutral-400"
+                  >
+                    <span>
+                      {a.sport || '—'}
+                      {a.durationMin ? ` · ${a.durationMin}min` : ''}
+                    </span>
+                    <span className="text-neutral-600">{relativeTime(a.date)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* HERO celebrativo */}
         <div className="register-hero px-5 pt-10 pb-6 relative overflow-hidden">
           <div className="register-hero-grid" />

@@ -33,13 +33,19 @@ Telas funcionando:
   Ordem: foto, informações/bio, molduras, progresso, estatísticas, salvar.
 - Amigos: feed dos amigos com status, enviar incentivo (item + mensagem), perfil
   público do atleta (/athlete/:id), notificações recebidas.
-- Home (feed social): seu resumo + botão Registrar (placeholder), "Precisa de um
-  empurrão" (inativos), feed de atividade dos amigos. 3 reações de 1 toque
-  (Fogo/Força/Cutucar). Sininho de notificações com badge + responder/devolver.
+- Home (feed social): seu resumo (sequência real + tira de frequência de 7 dias)
+  + botão Registrar, "Precisa de um empurrão" (inativos), feed de atividade dos
+  amigos. 3 reações de 1 toque (Fogo/Força/Cutucar) com limite diário por amigo.
+  Sininho de notificações com badge + responder/devolver.
+- Registrar treino (/register): 1 toque grava o treino (detalhes opcionais) em
+  localStorage e alimenta sequência e frequência. Foto do treino: placeholder.
+- Ranking (/ranking): só amigos, por frequência semanal (empate: sequência).
 - Navegação: lateral no desktop, inferior no mobile. Aba Amigos incluída.
 
-Dados fixos que viram reais quando houver "Registrar atividade": status
-(50 km, 4 dias, etc.), tempos ("há 3 h"), estatísticas do perfil.
+Já reais (para o usuário logado): treinos registrados, sequência, semana.
+Ainda fixos: status e dados dos amigos (characters.js), tempos ("há 3 h"),
+estatísticas do perfil (47 aulas, #12), barra "20/60 aulas". Telas legadas do
+app-academia (Agenda, Check-in, Teacher/Academy) seguem no código.
 
 ## Modo de trabalho (combinado com o Felipe)
 
@@ -75,7 +81,9 @@ como escritas.
 
 ## Próximos passos
 
-1. Registrar atividade — torna os status e tempos reais (destrava a gamificação).
+1. Enriquecer a Home (detalhes em HANDOFF.md): trocar "aulas" por meta semanal,
+   "Treinei hoje" no resumo, selo "✓ hoje", marcos de sequência. (Registrar
+   atividade já existe.)
 2. Agente designer — cara premium depois do núcleo pronto.
 3. Backend (Supabase) — login real, dados multi-aparelho; aí entram os revisores.
 

@@ -77,19 +77,19 @@ const TodaySection = () => {
       <div className="w-full px-1 mt-5">
         <button
           onClick={handleRegister}
-          className={`w-full rounded-2xl py-5 px-5 font-extrabold text-lg flex items-center justify-center gap-2 tracking-tight text-white transition-transform active:scale-[.98] ${
+          className={`w-full rounded-2xl py-5 px-5 font-extrabold text-lg flex items-center justify-center gap-2 tracking-tight transition-transform active:scale-[.98] ${
             trained
-              ? 'bg-gradient-to-br from-[#2ec27a] to-[#1b8a52] shadow-[0_10px_24px_rgba(46,194,122,0.3)]'
-              : 'bg-gradient-to-br from-[#ff6b4a] to-[#ff4d2e] shadow-[0_14px_30px_rgba(255,77,46,0.4)]'
+              ? 'bg-white/5 border border-white/10 text-gray-400 shadow-none'
+              : 'bg-gradient-to-br from-[#ff6b4a] to-[#ff4d2e] shadow-[0_14px_30px_rgba(255,77,46,0.4)] text-white'
           }`}
         >
           {trained ? (
             <>
-              <span className="w-6 h-6 rounded-full bg-white/20 inline-flex items-center justify-center">
+              <span className="w-6 h-6 rounded-full bg-white/10 inline-flex items-center justify-center">
                 <Check className="w-3.5 h-3.5" />
               </span>
               <span>Treinei hoje</span>
-              <span className="opacity-80 font-semibold text-base">
+              <span className="opacity-70 font-semibold text-base">
                 · {relativeTime(latest?.date)}
                 {latest?.sport ? ` · ${latest.sport}` : ''}
               </span>

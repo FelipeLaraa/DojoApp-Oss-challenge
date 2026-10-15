@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 import ShieldProfile from '@/components/ShieldProfile';
 import ProgressBar from '@/components/ProgressBar';
+import WeekStrip from '@/components/WeekStrip';
 import { characters } from '@/data/characters';
 import { readActivities, computeStreak, weekTrained } from '@/lib/activity';
 import { reactionCounts, bumpReaction, sentToday, canReact, recordSent, LIMITS } from '@/lib/reactions';
@@ -28,27 +29,6 @@ const mergeSaved = (character) => {
   } catch {
     return character;
   }
-};
-
-// Tira de frequência dos últimos 7 dias (bolinhas) + contagem da semana.
-// O último ponto é hoje (destacado).
-const WeekStrip = ({ days = [] }) => {
-  const count = days.filter(Boolean).length;
-  return (
-    <div className="flex items-center gap-2 mt-1.5">
-      <div className="flex gap-1">
-        {days.map((d, i) => (
-          <span
-            key={i}
-            className={`w-2.5 h-2.5 rounded-full ${d ? 'bg-orange-400' : 'bg-gray-700'} ${
-              i === days.length - 1 ? 'ring-1 ring-white/50' : ''
-            }`}
-          />
-        ))}
-      </div>
-      <span className="text-xs text-gray-400">{count}x esta semana</span>
-    </div>
-  );
 };
 
 const ReactionRow = ({ onReact, counts, sent }) => (

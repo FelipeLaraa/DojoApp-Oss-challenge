@@ -1,5 +1,6 @@
 import React from 'react';
 import { useLocation, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { Home, Calendar, QrCode, Trophy, User, Users } from 'lucide-react';
 
@@ -39,8 +40,15 @@ const BottomNav = () => {
               to={item.path}
               className={`nav-item ${isActive ? 'active' : ''}`}
             >
-              <item.icon className="w-5 h-5" />
-              <span>{item.label}</span>
+              {isActive && (
+                <motion.span
+                  layoutId="nav-pill"
+                  className="nav-pill"
+                  transition={{ type: 'spring', stiffness: 260, damping: 28 }}
+                />
+              )}
+              <item.icon className="nav-icon" />
+              <span className="nav-label">{item.label}</span>
             </Link>
           );
         })}

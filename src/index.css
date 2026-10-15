@@ -277,43 +277,120 @@ body {
   box-shadow: 0 12px 32px rgba(255, 107, 107, 0.4);
 }
 
+/* Nav flutuante — pairando, não colada. Blur premium estilo Dynamic Island.
+   Centralizada na coluna do app (max-width 414px), com margens laterais e
+   inferior respeitando safe-area no iOS. */
 .app-nav {
   position: fixed;
-  bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 100%;
-  max-width: 414px;
-  background: rgba(10, 10, 10, 0.95);
-  backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 12px 0;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  width: calc(100% - 28px);
+  max-width: 386px; /* 414 - 28 (14 de cada lado) */
+  height: 68px;
+  border-radius: 24px;
+  background: rgba(18, 19, 22, 0.72);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 20px 40px -10px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
   z-index: 50;
+}
+
+/* Highlight sutil no topo (reforça efeito de vidro) */
+.app-nav::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 24px;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 40%);
+}
+
+/* Fallback: navegador sem backdrop-filter cai pra fundo sólido escuro */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .app-nav {
+    background: rgba(18, 19, 22, 0.92);
+  }
 }
 
 .app-nav-inner {
   display: flex;
   justify-content: space-around;
   align-items: center;
+  height: 100%;
+  padding: 0 8px;
 }
 
-/* Navegação SEMPRE horizontal embaixo, inclusive no desktop. */
-
 .nav-item {
+  position: relative;
+  flex: 1;
+  height: 52px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  gap: 2px;
   color: rgba(255, 255, 255, 0.6);
   text-decoration: none;
-  font-size: 12px;
-  transition: all 0.3s ease;
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  transition: color 0.2s ease;
 }
 
-.nav-item.active {
-  color: var(--dojo-coral);
+.nav-icon {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2;
+  position: relative;
+  z-index: 1;
+}
+
+.nav-label {
+  position: relative;
+  z-index: 1;
 }
 
 .nav-item:hover {
-  color: var(--dojo-white);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.nav-item.active {
+  color: #fff;
+}
+
+.nav-item.active .nav-label {
+  color: #fecaca;
+  font-weight: 700;
+}
+
+/* Pílula ativa — fundo translúcido vermelho com glow interno */
+.nav-pill {
+  position: absolute;
+  inset: 4px 2px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(239, 68, 68, 0.22), rgba(239, 68, 68, 0.08));
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  box-shadow:
+    0 0 20px rgba(239, 68, 68, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  z-index: 0;
+}
+
+/* Risquinho de luz no topo da aba ativa (orange → red) */
+.nav-pill::after {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 28px;
+  height: 3px;
+  border-radius: 0 0 4px 4px;
+  background: linear-gradient(90deg, #f97316, #ef4444);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.7);
 }

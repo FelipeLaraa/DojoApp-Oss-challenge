@@ -40,7 +40,7 @@ const StudentHome = () => {
   };
 
   return (
-    <div className="min-h-screen pb-24 p-6 dojo-gradient">
+    <div className="min-h-screen pb-28 p-6 dojo-gradient">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

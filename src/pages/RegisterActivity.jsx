@@ -202,40 +202,6 @@ const RegisterActivity = () => {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        {/* Card discreto: sessões já registradas hoje */}
-        {todays.length >= 1 && (
-          <div className="px-5 pt-5">
-            <div className="card-tight p-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-[10px] uppercase tracking-wider text-neutral-500">
-                    Hoje
-                  </div>
-                  <div className="text-sm font-semibold text-white mt-0.5">
-                    {todays.length} {todays.length === 1 ? 'sessão' : 'sessões'}
-                    {todayTotalMin ? ` · total ${todayTotalMin}min` : ''}
-                  </div>
-                </div>
-                <div className="text-[11px] text-emerald-400 font-semibold">✓ dia garantido</div>
-              </div>
-              <div className="mt-2 flex flex-col gap-1">
-                {todays.map((a, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between text-[11px] text-neutral-400"
-                  >
-                    <span>
-                      {a.sport || '—'}
-                      {a.durationMin ? ` · ${a.durationMin}min` : ''}
-                    </span>
-                    <span className="text-neutral-600">{relativeTime(a.date)}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* HERO celebrativo */}
         <div className="register-hero px-5 pt-10 pb-6 relative overflow-hidden">
           <div className="register-hero-grid" />
@@ -283,7 +249,45 @@ const RegisterActivity = () => {
               />
             ))}
           </div>
+
+          {/* Chip "hoje garantido" — ancora o dia dentro da celebração da streak */}
+          {todays.length >= 1 && (
+            <div className="relative mt-4 flex justify-center">
+              <span className="inline-flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 text-[11px] font-semibold px-2.5 py-1 rounded-full">
+                <Check className="w-3 h-3" />
+                hoje garantido
+                {todays.length > 1 && ` · ${todays.length}ª sessão`}
+              </span>
+            </div>
+          )}
         </div>
+
+        {/* Timeline das sessões de hoje — meta-info discreta antes do form */}
+        {todays.length >= 1 && (
+          <div className="px-5 pt-3 pb-1 flex items-center justify-between">
+            <div className="text-[10px] uppercase tracking-wider text-neutral-500">Hoje</div>
+            <div className="flex-1 mx-4 flex items-center gap-2">
+              {todays.map((a, i) => (
+                <React.Fragment key={i}>
+                  <div className="flex flex-col items-center gap-0.5">
+                    <div className="w-2 h-2 rounded-full bg-neutral-400" />
+                    <div className="text-[10px] text-neutral-500">
+                      {new Date(a.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  </div>
+                  {i < todays.length - 1 && <div className="flex-1 h-px bg-neutral-700" />}
+                </React.Fragment>
+              ))}
+            </div>
+            {todayTotalMin > 0 && (
+              <div className="text-[10px] uppercase tracking-wider text-neutral-500 whitespace-nowrap">
+                {todayTotalMin >= 60
+                  ? `${Math.floor(todayTotalMin / 60)}h${String(todayTotalMin % 60).padStart(2, '0')} total`
+                  : `${todayTotalMin}min total`}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ESSENCIAL */}
         <div className="px-5 pt-6 space-y-4">

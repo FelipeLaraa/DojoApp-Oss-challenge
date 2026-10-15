@@ -22,14 +22,31 @@ export const readActivities = (userId) => {
   }
 };
 
+// Fração aproximada de uso do localStorage (0..1+). O limite típico de um
+// navegador é ~5 MB por origem; usamos isso como base de referência.
+export const storageUsageRatio = () => {
+  try {
+    let total = 0;
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      const v = localStorage.getItem(k) || '';
+      total += k.length + v.length;
+    }
+    return total / (5 * 1024 * 1024);
+  } catch {
+    return 0;
+  }
+};
+
 // Grava um treino. Retorna a lista atualizada (ou null se o armazenamento encheu).
-export const addActivity = (userId, { sport, durationMin, note } = {}) => {
+export const addActivity = (userId, { sport, durationMin, note, photo } = {}) => {
   if (!userId) return null;
   const entry = {
     date: new Date().toISOString(),
     sport: sport || null,
     durationMin: durationMin ? Number(durationMin) : null,
-    note: note ? String(note).slice(0, 140) : null
+    note: note ? String(note).slice(0, 140) : null,
+    photo: photo || null
   };
   const list = [entry, ...readActivities(userId)];
   try {

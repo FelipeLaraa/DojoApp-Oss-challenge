@@ -1,11 +1,46 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Flame, Camera, ChevronDown, Check, ArrowLeft } from 'lucide-react';
+import { Flame, Camera, ChevronDown, Check, ArrowLeft, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
-import { addActivity, readActivities, computeStreak, trainedToday } from '@/lib/activity';
+import {
+  addActivity,
+  readActivities,
+  computeStreak,
+  trainedToday,
+  storageUsageRatio
+} from '@/lib/activity';
+
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MB
+const MAX_SIDE = 800;
+const JPEG_QUALITY = 0.75;
+
+// Lê o arquivo, redimensiona pra que o maior lado seja MAX_SIDE (mantendo a
+// proporção) e exporta como JPEG com qualidade 0.75. Devolve um dataURL.
+const compressImage = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('read_error'));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('decode_error'));
+      img.onload = () => {
+        const scale = Math.min(1, MAX_SIDE / Math.max(img.width, img.height));
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', JPEG_QUALITY));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
 
 const SPORTS = ['BJJ', 'Wrestling', 'Corrida', 'Musculação', 'Boxe', 'Luta livre'];
 
@@ -21,13 +56,26 @@ const RegisterActivity = () => {
   const [sport, setSport] = useState(user?.mainSport || 'BJJ');
   const [duration, setDuration] = useState('');
   const [note, setNote] = useState('');
+  const [photo, setPhoto] = useState(null);
+  const fileInputRef = useRef(null);
 
   const handleRegister = () => {
-    const updated = addActivity(user?.id, { sport, durationMin: duration, note });
+    if (storageUsageRatio() >= 0.9) {
+      toast({
+        title: 'Armazenamento quase cheio',
+        description: 'Apague treinos antigos pra continuar registrando com foto.'
+      });
+    }
+    const updated = addActivity(user?.id, {
+      sport,
+      durationMin: duration,
+      note,
+      photo
+    });
     if (!updated) {
       toast({
-        title: 'Não foi possível salvar',
-        description: 'O armazenamento do navegador está cheio ou indisponível.',
+        title: 'Armazenamento cheio',
+        description: 'Remova treinos antigos pra registrar este.',
         variant: 'destructive'
       });
       return;
@@ -42,13 +90,33 @@ const RegisterActivity = () => {
     navigate('/student');
   };
 
-  // Foto: placeholder até existir backend (ver limite do localStorage).
-  const handlePhoto = () => {
-    toast({
-      title: 'Foto do treino — em breve',
-      description: 'Vai chegar junto com o armazenamento na nuvem.'
-    });
+  const handlePhotoChange = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = ''; // permite re-selecionar o mesmo arquivo
+    if (!file) return;
+
+    if (file.size > MAX_UPLOAD_BYTES) {
+      toast({
+        title: 'Imagem muito grande',
+        description: 'Escolha uma menor que 10 MB.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    try {
+      const dataUrl = await compressImage(file);
+      setPhoto(dataUrl);
+    } catch {
+      toast({
+        title: 'Não foi possível ler a imagem',
+        description: 'Tente outra foto (JPEG ou PNG).',
+        variant: 'destructive'
+      });
+    }
   };
+
+  const handleRemovePhoto = () => setPhoto(null);
 
   return (
     <div className="min-h-screen pb-24 p-6 dojo-gradient">
@@ -146,16 +214,40 @@ const RegisterActivity = () => {
                 />
               </div>
 
-              {/* Foto: placeholder até o backend */}
+              {/* Foto do treino */}
               <div>
                 <label className="block text-sm font-medium mb-1">Foto do treino</label>
-                <button
-                  onClick={handlePhoto}
-                  className="w-full flex items-center justify-center gap-2 py-6 rounded-lg border border-dashed border-gray-600 text-gray-400 hover:border-red-500 hover:text-red-300 transition-all text-sm"
-                >
-                  <Camera className="w-5 h-5" />
-                  Adicionar foto (em breve)
-                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png"
+                  onChange={handlePhotoChange}
+                  className="hidden"
+                />
+                {!photo ? (
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full flex items-center justify-center gap-2 py-6 rounded-lg border border-dashed border-gray-600 text-gray-400 hover:border-red-500 hover:text-red-300 transition-all text-sm"
+                  >
+                    <Camera className="w-5 h-5" />
+                    Adicionar foto
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={photo}
+                      alt="Prévia do treino"
+                      className="w-20 h-20 rounded-lg object-cover border border-gray-600"
+                    />
+                    <button
+                      onClick={handleRemovePhoto}
+                      className="flex items-center gap-1 text-sm text-gray-300 hover:text-red-400"
+                    >
+                      <X className="w-4 h-4" />
+                      Remover foto
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           )}

@@ -297,28 +297,7 @@ body {
   align-items: center;
 }
 
-/* Desktop: navegação vira barra lateral vertical à esquerda */
-@media (min-width: 768px) {
-  .app-nav {
-    left: 0;
-    top: 0;
-    bottom: 0;
-    transform: none;
-    width: 96px;
-    max-width: none;
-    height: 100vh;
-    border-top: none;
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 28px 0;
-  }
-
-  .app-nav-inner {
-    flex-direction: column;
-    justify-content: flex-start;
-    gap: 28px;
-    height: 100%;
-  }
-}
+/* Navegação SEMPRE horizontal embaixo, inclusive no desktop. */
 
 .nav-item {
   display: flex;

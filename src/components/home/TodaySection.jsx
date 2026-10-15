@@ -41,8 +41,13 @@ const TodaySection = () => {
 
   return (
     <section className="flex flex-col items-center">
+      {/* Stories semanais no topo (padrão Instagram) */}
+      <div className="w-full">
+        <WeekStories activities={myActivities} user={user} trainedToday={trained} />
+      </div>
+
       {/* Hero: escudo grande */}
-      <div className="pt-2 pb-2">
+      <div className="pt-4 pb-2">
         <ShieldProfile
           type={user?.frame || 'black'}
           emblem={user?.emblem}
@@ -128,10 +133,6 @@ const TodaySection = () => {
         </div>
       </div>
 
-      {/* Stories semanais */}
-      <div className="w-full mt-5">
-        <WeekStories activities={myActivities} user={user} trainedToday={trained} />
-      </div>
     </section>
   );
 };

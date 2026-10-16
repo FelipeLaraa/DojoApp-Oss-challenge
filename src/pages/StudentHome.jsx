@@ -1,16 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, Home as HomeIcon, Users } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import NotificationBell from '@/components/NotificationBell';
 import TodaySection from '@/components/home/TodaySection';
-import FriendsFeed from '@/components/home/FriendsFeed';
 
-// Home com dropdown de contexto no topo: "Seu dia" (default) ou
-// "Feed dos amigos". Transição em fade entre as duas views.
+// Home com dropdown de atalho no topo. "Seu dia" fica como view interna.
+// "Feed dos amigos" não troca view: navega direto pra aba Amigos.
 const StudentHome = () => {
   const { user } = useAuth();
-  const [view, setView] = useState('today');
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -32,11 +32,13 @@ const StudentHome = () => {
     { id: 'today', label: 'Seu dia', icon: HomeIcon },
     { id: 'friends', label: 'Feed dos amigos', icon: Users }
   ];
-  const current = options.find((o) => o.id === view) || options[0];
+  const current = options[0];
 
   const choose = (id) => {
-    setView(id);
     setOpen(false);
+    if (id === 'friends') {
+      navigate('/friends');
+    }
   };
 
   return (
@@ -69,7 +71,7 @@ const StudentHome = () => {
                 >
                   {options.map((o) => {
                     const Icon = o.icon;
-                    const active = o.id === view;
+                    const active = o.id === current.id;
                     return (
                       <button
                         key={o.id}
@@ -91,18 +93,9 @@ const StudentHome = () => {
           </div>
         </NotificationBell>
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={view}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
-            className="space-y-6"
-          >
-            {view === 'today' ? <TodaySection /> : <FriendsFeed />}
-          </motion.div>
-        </AnimatePresence>
+        <div className="space-y-6">
+          <TodaySection />
+        </div>
       </motion.div>
     </div>
   );

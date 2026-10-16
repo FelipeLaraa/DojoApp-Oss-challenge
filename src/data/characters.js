@@ -1,6 +1,17 @@
 // Personagens fictícios do dojo — originais, para testes e demonstração.
 // Estrutura pensada para crescer: no futuro cada um ganha experiências,
 // expertise e histórico próprios.
+//
+// month: array de 30 booleanos, índice 0 = 30 dias atrás, índice 29 = hoje.
+// milestone: { days, hitAt } marco de sequência mais recente (ISO string).
+//   Marcos válidos: 7, 14, 30, 50, 100, 365.
+
+const daysAgoISO = (n) => {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  d.setHours(10, 0, 0, 0);
+  return d.toISOString();
+};
 
 export const characters = [
   {
@@ -21,6 +32,13 @@ export const characters = [
     emblem: 'grapple',
     streak: 42,
     week: [true, true, true, true, true, true, true],
+    month: [
+      true, true, true, true, true, true, true,
+      true, true, true, true, true, true, true,
+      true, true, true, true, true, true, true,
+      true, true, true, true, true, true, true, true, true
+    ],
+    milestone: { days: 30, hitAt: daysAgoISO(12) },
     reactions: { Fogo: 12, 'Força': 5, Cutucar: 2 },
     activity: { headline: 'Determinado', detail: '4 dias na semana com check-in' }
   },
@@ -42,6 +60,14 @@ export const characters = [
     emblem: 'grapple',
     streak: 12,
     week: [false, true, true, false, true, true, false],
+    // ~16/30 — densidade média
+    month: [
+      false, true, true, false, true, true, false,
+      true, false, true, false, true, true, false,
+      true, false, true, true, false, true, true,
+      false, true, true, false, true, true, false, true, true
+    ],
+    milestone: { days: 7, hitAt: daysAgoISO(5) },
     reactions: { Fogo: 7, 'Força': 3, Cutucar: 1 },
     activity: { headline: 'Eclético', detail: '3 modalidades diferentes este mês' }
   },
@@ -63,6 +89,14 @@ export const characters = [
     emblem: 'run',
     streak: 23,
     week: [true, true, false, true, true, true, true],
+    // ~24/30 — densidade alta, bate com streak de 23
+    month: [
+      true, true, false, true, true, true, true,
+      false, true, true, true, true, true, true,
+      true, true, true, true, true, false, true,
+      true, true, true, true, true, true, true, true, true
+    ],
+    milestone: { days: 14, hitAt: daysAgoISO(9) },
     reactions: { Fogo: 9, 'Força': 4, Cutucar: 0 },
     activity: { headline: '50 km', detail: 'percorridos este mês' }
   },
@@ -84,6 +118,14 @@ export const characters = [
     emblem: 'lift',
     streak: 0,
     week: [false, true, false, false, false, false, false],
+    // ~2/30 — densidade baixa (sumido)
+    month: [
+      false, true, false, false, false, false, false,
+      false, false, true, false, false, false, false,
+      false, false, false, false, false, false, false,
+      false, false, false, false, false, false, false, false, false
+    ],
+    milestone: null,
     reactions: { Fogo: 1, 'Força': 0, Cutucar: 3 },
     activity: { headline: 'Inativo', detail: 'sem treinos recentes', inactive: true }
   }

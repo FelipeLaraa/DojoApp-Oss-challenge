@@ -105,12 +105,17 @@ const NotificationPanel = ({ notifications, seenAt = 0, onClose, onChange }) => 
           return (
             <div
               key={i}
-              className={`relative text-sm rounded-lg p-3 pl-4 ${
-                fresh ? 'bg-white/[0.08]' : 'bg-white/5'
+              className={`relative text-sm rounded-lg p-3 pl-4 border ${
+                fresh
+                  ? 'bg-[#ff6b4a]/[0.06] border-[#ff6b4a]/25'
+                  : 'bg-white/[0.03] border-white/5 opacity-60'
               }`}
             >
               {fresh && (
-                <span className="absolute left-1.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-red-500" />
+                <span className="absolute left-1.5 top-1/2 -translate-y-1/2 flex w-2 h-2">
+                  <span className="absolute inline-flex w-full h-full rounded-full bg-[#ff6b4a] opacity-60 animate-ping" />
+                  <span className="relative inline-flex w-2 h-2 rounded-full bg-[#ff6b4a]" />
+                </span>
               )}
               <span className="font-medium">{n.from}</span> mandou{' '}
               <span className="text-red-400">{n.item}</span>

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { X, Flame } from 'lucide-react';
+import { ChevronUp, Flame } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { characters } from '@/data/characters';
@@ -7,6 +7,9 @@ import { characters } from '@/data/characters';
 // Resolve sender id. New notifications carry fromId; older ones only had name.
 const senderIdOf = (n) =>
   n.fromId || characters.find((c) => c.name.toLowerCase() === (n.from || '').toLowerCase())?.id;
+
+// Milestones get a special gold CTA. Detect by explicit type or by item label.
+const isMilestone = (n) => n.type === 'milestone' || n.item === 'Marco';
 
 // Lists received notifications and lets the user reply or send fire back.
 // Owns its own reply draft state. Writes to localStorage directly, same as
@@ -18,9 +21,15 @@ const NotificationPanel = ({ notifications, seenAt = 0, onClose, onChange }) => 
   const { user } = useAuth();
   const [replyIdx, setReplyIdx] = useState(null);
   const [replyText, setReplyText] = useState('');
-  const [tab, setTab] = useState('new');
 
   const isNew = (n) => new Date(n.date).getTime() > seenAt;
+  const newCount = useMemo(
+    () => notifications.filter(isNew).length,
+    [notifications, seenAt]
+  );
+
+  // If there is nothing new, default to the full list so the panel isn't empty.
+  const [tab, setTab] = useState(newCount > 0 ? 'new' : 'all');
 
   const list = useMemo(
     () => (tab === 'new' ? notifications.filter(isNew) : notifications),
@@ -54,9 +63,16 @@ const NotificationPanel = ({ notifications, seenAt = 0, onClose, onChange }) => 
   return (
     <div className="dojo-card p-4 space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold">Notificações</h3>
-        <button onClick={onClose} aria-label="Fechar notificações">
-          <X className="w-5 h-5 text-gray-400 hover:text-white" />
+        <div className="flex items-center gap-2">
+          <h3 className="font-semibold">Notificações</h3>
+          {newCount > 0 && (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/15 text-red-300 border border-red-500/30">
+              {newCount} {newCount === 1 ? 'nova' : 'novas'}
+            </span>
+          )}
+        </div>
+        <button onClick={onClose} aria-label="Retrair notificações">
+          <ChevronUp className="w-5 h-5 text-gray-400 hover:text-white" />
         </button>
       </div>
 
@@ -67,7 +83,7 @@ const NotificationPanel = ({ notifications, seenAt = 0, onClose, onChange }) => 
             tab === 'new' ? 'bg-red-500 text-white' : 'text-gray-300 hover:text-white'
           }`}
         >
-          Novas
+          {newCount > 0 ? `Novas · ${newCount}` : 'Novas'}
         </button>
         <button
           onClick={() => setTab('all')}
@@ -85,6 +101,7 @@ const NotificationPanel = ({ notifications, seenAt = 0, onClose, onChange }) => 
         list.map((n, i) => {
           const sid = senderIdOf(n);
           const fresh = isNew(n);
+          const milestone = isMilestone(n);
           return (
             <div
               key={i}
@@ -100,7 +117,15 @@ const NotificationPanel = ({ notifications, seenAt = 0, onClose, onChange }) => 
               {n.message && <p className="text-gray-300 mt-1">"{n.message}"</p>}
 
               {sid && (
-                <div className="flex gap-2 mt-2">
+                <div className="flex gap-2 mt-2 flex-wrap">
+                  {milestone && (
+                    <button
+                      onClick={() => sendTo(sid, n.from, 'Parabéns', '👏')}
+                      className="px-2 py-1 rounded-lg bg-amber-500/15 border border-amber-400/30 text-amber-200 text-xs font-semibold hover:bg-amber-500/25"
+                    >
+                      Mandar 👏
+                    </button>
+                  )}
                   <button
                     onClick={() => sendTo(sid, n.from, 'Fogo')}
                     className="flex items-center gap-1 px-2 py-1 rounded-lg border border-gray-700 hover:border-red-500 text-xs"

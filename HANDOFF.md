@@ -138,6 +138,32 @@ K. Backend (Supabase) — destrava quase tudo que hoje é "demo"
    - Entrada dos agentes code-reviewer e security-auditor
    É um salto grande. Não é pra amanhã, mas é o próximo horizonte real.
 
+## Rota pra virar app de celular (sem reescrever)
+
+O app já foi construído mobile-first (viewport 375px, nav flutuante, touch
+targets grandes). O trabalho pesado já está feito. Rota recomendada, do
+mais fácil pro mais trabalhoso:
+
+1. **PWA** (grátis, 1-2h). Adicionar manifest + service worker. O usuário
+   abre o app no navegador do celular → "Adicionar à tela inicial" → vira
+   ícone com splash, abre fullscreen sem barra do navegador, funciona
+   offline. Zero loja, zero custo. Limite: notificação push limitada no
+   iOS (Android ok). PERFEITO pra testar com amigos agora e validar.
+
+2. **Capacitor** (1-2 semanas, pra lançar sério). Embrulha o React atual
+   num container nativo iOS/Android. Mesmo código, vira .apk/.ipa.
+   Google Play: $25 uma vez. App Store: $99/ano + revisão manual + Mac
+   obrigatório pra publicar iOS. Faz sentido quando o backend existir.
+
+3. **React Native** (meses). Reescreve usando componentes nativos. Overkill
+   enquanto não tiver milhares de usuários pedindo performance que PWA/
+   Capacitor não dão. Hoje não vale.
+
+O PWA é tão barato que vale fazer já que o Felipe quiser testar o app no
+próprio bolso. Alerta importante: o localStorage é por aparelho, então
+instalar o PWA no celular começa do zero (os dados do navegador do PC
+não migram). Isso só se resolve com o Backend (K acima).
+
 ## Como continuar
 
 Leia o CLAUDE.md para o modo de trabalho. Rode o app com `npm run dev`. Antes de

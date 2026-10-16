@@ -2,11 +2,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Send, Bell, ChevronDown, Users, List, Plus, X } from 'lucide-react';
+import { Send, ChevronDown, Users, List, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 import ShieldProfile from '@/components/ShieldProfile';
 import FriendsFeed from '@/components/home/FriendsFeed';
+import NotificationBell from '@/components/NotificationBell';
 import { characters } from '@/data/characters';
 
 const QUICK_MESSAGES = ['bora treinar', 'tô contigo', 'cadê você?', 'você consegue', 'vamo!'];
@@ -32,17 +33,12 @@ const readNotifications = (userId) => {
 const Friends = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [notifications, setNotifications] = useState([]);
   const [sheetFriend, setSheetFriend] = useState(null);
   const [customOpen, setCustomOpen] = useState(false);
   const [customMessage, setCustomMessage] = useState('');
   const [view, setView] = useState('feed');
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
-
-  useEffect(() => {
-    if (user?.id) setNotifications(readNotifications(user.id));
-  }, [user]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -120,48 +116,50 @@ const Friends = () => {
         animate={{ opacity: 1, y: 0 }}
         className="space-y-6"
       >
-        <div ref={menuRef} className="relative">
-          <button
-            onClick={() => setMenuOpen((v) => !v)}
-            className="inline-flex items-center gap-1.5 text-xl font-extrabold tracking-tight hover:opacity-80"
-          >
-            <span>{current.label}</span>
-            <ChevronDown
-              className={`w-5 h-5 text-gray-400 transition-transform ${menuOpen ? 'rotate-180' : ''}`}
-            />
-          </button>
+        <NotificationBell>
+          <div ref={menuRef} className="relative">
+            <button
+              onClick={() => setMenuOpen((v) => !v)}
+              className="inline-flex items-center gap-1.5 text-xl font-extrabold tracking-tight hover:opacity-80"
+            >
+              <span>{current.label}</span>
+              <ChevronDown
+                className={`w-5 h-5 text-gray-400 transition-transform ${menuOpen ? 'rotate-180' : ''}`}
+              />
+            </button>
 
-          <AnimatePresence>
-            {menuOpen && (
-              <motion.div
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                transition={{ duration: 0.12 }}
-                className="absolute left-0 top-full mt-2 min-w-[200px] rounded-xl bg-[#141414] border border-white/10 shadow-2xl overflow-hidden z-20"
-              >
-                {options.map((o) => {
-                  const Icon = o.icon;
-                  const active = o.id === view;
-                  return (
-                    <button
-                      key={o.id}
-                      onClick={() => choose(o.id)}
-                      className={`w-full flex items-center gap-2.5 px-4 py-3 text-sm font-semibold text-left transition-colors ${
-                        active
-                          ? 'bg-white/5 text-white'
-                          : 'text-gray-300 hover:bg-white/5'
-                      }`}
-                    >
-                      <Icon className="w-4 h-4" />
-                      {o.label}
-                    </button>
-                  );
-                })}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+            <AnimatePresence>
+              {menuOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.12 }}
+                  className="absolute left-0 top-full mt-2 min-w-[200px] rounded-xl bg-[#141414] border border-white/10 shadow-2xl overflow-hidden z-20"
+                >
+                  {options.map((o) => {
+                    const Icon = o.icon;
+                    const active = o.id === view;
+                    return (
+                      <button
+                        key={o.id}
+                        onClick={() => choose(o.id)}
+                        className={`w-full flex items-center gap-2.5 px-4 py-3 text-sm font-semibold text-left transition-colors ${
+                          active
+                            ? 'bg-white/5 text-white'
+                            : 'text-gray-300 hover:bg-white/5'
+                        }`}
+                      >
+                        <Icon className="w-4 h-4" />
+                        {o.label}
+                      </button>
+                    );
+                  })}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </NotificationBell>
 
         <AnimatePresence mode="wait">
           <motion.div
@@ -174,22 +172,6 @@ const Friends = () => {
           >
             {view === 'feed' ? (
               <>
-                {notifications.length > 0 && (
-                  <div className="dojo-card p-4 space-y-3">
-                    <h3 className="font-semibold flex items-center gap-2">
-                      <Bell className="w-5 h-5 text-red-500" />
-                      Para você
-                    </h3>
-                    {notifications.map((n, i) => (
-                      <div key={i} className="text-sm bg-white/5 rounded-lg p-3">
-                        <span className="font-medium">{n.from}</span> enviou{' '}
-                        <span className="text-red-400">{n.item}</span>
-                        {n.message && <p className="text-gray-300 mt-1">"{n.message}"</p>}
-                      </div>
-                    ))}
-                  </div>
-                )}
-
                 <FriendsFeed />
 
                 <div>

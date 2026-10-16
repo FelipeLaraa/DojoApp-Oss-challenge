@@ -23,6 +23,10 @@ const NotificationBell = ({ userId, children }) => {
       return 0;
     }
   });
+  // Snapshot of lastSeen captured when the panel opens, so the "Novas" filter
+  // keeps marking as new the items that were unread BEFORE this open — even
+  // though we immediately bump lastSeen to clear the badge.
+  const [panelSeenAt, setPanelSeenAt] = useState(0);
 
   let notifications = [];
   try {
@@ -32,6 +36,7 @@ const NotificationBell = ({ userId, children }) => {
 
   const openPanel = () => {
     const now = Date.now();
+    setPanelSeenAt(lastSeen);
     setShowPanel(true);
     setLastSeen(now);
     try {
@@ -57,6 +62,7 @@ const NotificationBell = ({ userId, children }) => {
       {showPanel && (
         <NotificationPanel
           notifications={notifications}
+          seenAt={panelSeenAt}
           onClose={() => setShowPanel(false)}
           onChange={() => force((n) => n + 1)}
         />

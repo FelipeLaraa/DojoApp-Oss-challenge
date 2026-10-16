@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Bell, X, Flame } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { X, Flame } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { characters } from '@/data/characters';
@@ -11,10 +11,21 @@ const senderIdOf = (n) =>
 // Lists received notifications and lets the user reply or send fire back.
 // Owns its own reply draft state. Writes to localStorage directly, same as
 // before — no backend involved.
-const NotificationPanel = ({ notifications, onClose, onChange }) => {
+//
+// `seenAt` is the lastSeen timestamp captured BEFORE the panel opened: any
+// notification newer than that counts as "new" in this session.
+const NotificationPanel = ({ notifications, seenAt = 0, onClose, onChange }) => {
   const { user } = useAuth();
   const [replyIdx, setReplyIdx] = useState(null);
   const [replyText, setReplyText] = useState('');
+  const [tab, setTab] = useState('new');
+
+  const isNew = (n) => new Date(n.date).getTime() > seenAt;
+
+  const list = useMemo(
+    () => (tab === 'new' ? notifications.filter(isNew) : notifications),
+    [tab, notifications, seenAt]
+  );
 
   const sendTo = (targetId, targetName, item, message = '') => {
     if (!targetId) return;
@@ -37,24 +48,53 @@ const NotificationPanel = ({ notifications, onClose, onChange }) => {
     onChange?.();
   };
 
+  const emptyMessage =
+    tab === 'new' ? 'Sem novidades. Treine e incentive.' : 'Nenhuma notificação ainda.';
+
   return (
     <div className="dojo-card p-4 space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold flex items-center gap-2">
-          <Bell className="w-5 h-5 text-red-500" />
-          Notificações
-        </h3>
-        <button onClick={onClose}>
+        <h3 className="font-semibold">Notificações</h3>
+        <button onClick={onClose} aria-label="Fechar notificações">
           <X className="w-5 h-5 text-gray-400 hover:text-white" />
         </button>
       </div>
-      {notifications.length === 0 ? (
-        <p className="text-sm text-gray-400">Nada por aqui ainda. Treine e incentive!</p>
+
+      <div className="inline-flex rounded-full bg-white/5 p-1 text-xs">
+        <button
+          onClick={() => setTab('new')}
+          className={`px-3 py-1 rounded-full font-semibold transition-colors ${
+            tab === 'new' ? 'bg-red-500 text-white' : 'text-gray-300 hover:text-white'
+          }`}
+        >
+          Novas
+        </button>
+        <button
+          onClick={() => setTab('all')}
+          className={`px-3 py-1 rounded-full font-semibold transition-colors ${
+            tab === 'all' ? 'bg-red-500 text-white' : 'text-gray-300 hover:text-white'
+          }`}
+        >
+          Todas
+        </button>
+      </div>
+
+      {list.length === 0 ? (
+        <p className="text-sm text-gray-400">{emptyMessage}</p>
       ) : (
-        notifications.map((n, i) => {
+        list.map((n, i) => {
           const sid = senderIdOf(n);
+          const fresh = isNew(n);
           return (
-            <div key={i} className="text-sm bg-white/5 rounded-lg p-3">
+            <div
+              key={i}
+              className={`relative text-sm rounded-lg p-3 pl-4 ${
+                fresh ? 'bg-white/[0.08]' : 'bg-white/5'
+              }`}
+            >
+              {fresh && (
+                <span className="absolute left-1.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-red-500" />
+              )}
               <span className="font-medium">{n.from}</span> mandou{' '}
               <span className="text-red-400">{n.item}</span>
               {n.message && <p className="text-gray-300 mt-1">"{n.message}"</p>}

@@ -21,25 +21,40 @@ Futuro possível: juntar o lado social (amigo-pra-amigo) com check-in em academi
 
 Base gerada por vibe coding (Hostinger Horizons), reconstruída peça a peça.
 Stack: React 18 + Vite 4, Tailwind, react-router, framer-motion, lucide-react.
-Persistência: localStorage, com MEMÓRIA POR PERFIL (chave dojoProfile_<id>).
+PWA instalável: public/manifest.webmanifest + service worker (public/sw.js,
+cache-first), registrado em src/main.jsx.
+Persistência: localStorage, com MEMÓRIA POR PERFIL (chave dojoProfile_<id>) e
+treinos por perfil (dojoActivities_<id>, em src/lib/activity.js).
 NÃO existe ainda: backend, banco de dados, autenticação real.
 
 Telas funcionando:
 - Login: entrada rápida com 4 personagens fictícios (Felipe, Thiago, Nicole,
   Ciclano) em src/data/characters.js. Cada um tem faixa, moldura, modalidade,
-  bio e status de atividade.
+  bio, sequência, calendário do mês e status de atividade (dados fixos).
 - Perfil: foto da galeria, @usuário, biografia (150 chars), modalidade principal,
   molduras temáticas por esporte (Luta/Levantamento/Corrida/Natação) com emblema.
   Ordem: foto, informações/bio, molduras, progresso, estatísticas, salvar.
-- Amigos: feed dos amigos com status, enviar incentivo (item + mensagem), perfil
-  público do atleta (/athlete/:id), notificações recebidas.
-- Home (feed social): seu resumo + botão Registrar (placeholder), "Precisa de um
-  empurrão" (inativos), feed de atividade dos amigos. 3 reações de 1 toque
-  (Fogo/Força/Cutucar). Sininho de notificações com badge + responder/devolver.
-- Navegação: lateral no desktop, inferior no mobile. Aba Amigos incluída.
+- Home ("Seu dia", /student): stories da semana, escudo com sequência, botão
+  "Treinei hoje" (leva ao Treinar) e resumo Sequência/Semana/Último — tudo REAL,
+  calculado dos treinos registrados. Dropdown no topo é atalho (Seu dia / Feed
+  dos amigos). Sininho de notificações com badge + responder/devolver.
+- Treinar (/register): REGISTRAR ATIVIDADE funciona. Modalidade, duração, humor,
+  comentário e foto (comprimida) são gravados; alimenta sequência, semana e Home.
+- Ranking (/ranking): ranking dos amigos por treinos na semana e sequência; a
+  linha do próprio usuário usa dados reais, os amigos usam dados fixos.
+- Amigos (/friends): feed com stories, marco de sequência e ranking da semana;
+  enviar incentivo (mensagens prontas ou própria) e notificações recebidas;
+  perfil público do atleta (/athlete/:id) com hero e tira da semana.
+- Agenda (/schedule), professor e academia (/teacher, /academy,
+  /teacher-checklist): resquício do app-academia, conteúdo todo fixo (mock).
+- Navegação: barra inferior (Home, Agenda, Treinar, Ranking, Amigos, Perfil).
 
-Dados fixos que viram reais quando houver "Registrar atividade": status
-(50 km, 4 dias, etc.), tempos ("há 3 h"), estatísticas do perfil.
+Ainda fixo/placeholder: status e sequência dos amigos (characters.js),
+estatísticas e progresso de faixa do Perfil (47 aulas, #12, 20/60), contador de
+reações (demonstração local), Agenda e telas de professor/academia.
+
+Observação: o script `build` chama tools/generate-llms.js, que não existe no
+repo; o `|| true` esconde a falha e o build do Vite passa normalmente.
 
 ## Modo de trabalho (combinado com o Felipe)
 
@@ -68,16 +83,19 @@ como escritas.
 
 - Renan Nagami (.claude/agents/renan-nagami.md): desenvolvedor. Técnico,
   analítico, poucas palavras, didático. Para antes de corrigir erros e pergunta.
-- A criar quando as telas-núcleo estiverem de pé: agente DESIGNER (contestador
-  criativo, cara premium — cores, tipografia, conceito). Mandato de discordar.
+- Nicole (.claude/agents/nicole.md): DESIGNER (contestadora criativa, cara
+  premium — cores, tipografia, conceito). Mandato de discordar.
 - A criar quando entrar backend: code-reviewer e security-auditor (ver repo
   addyosmani/agent-skills). O security vira obrigatório com dados/senhas.
 
 ## Próximos passos
 
-1. Registrar atividade — torna os status e tempos reais (destrava a gamificação).
-2. Agente designer — cara premium depois do núcleo pronto.
-3. Backend (Supabase) — login real, dados multi-aparelho; aí entram os revisores.
+1. (feito) Registrar atividade — sequência, semana e Home já são reais.
+2. Tornar o resto real: meta semanal no lugar de "aulas", estatísticas do Perfil
+   a partir dos treinos, tira de frequência no perfil público.
+3. Designer: a Nicole (.claude/agents/nicole.md) já cuida do visual; seguir
+   refinando.
+4. Backend (Supabase) — login real, dados multi-aparelho; aí entram os revisores.
 
 ## Pendências anotadas
 

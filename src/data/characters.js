@@ -13,6 +13,27 @@ const daysAgoISO = (n) => {
   return d.toISOString();
 };
 
+const hoursAgoISO = (h) => {
+  const d = new Date();
+  d.setHours(d.getHours() - h);
+  return d.toISOString();
+};
+
+// Gera um dataURL SVG com gradiente vertical + emoji grande centralizado.
+// Serve como foto "fake" do último treino enquanto não há backend.
+const gradientPhoto = (from, to, emoji) => {
+  const svg =
+    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 700'>` +
+    `<defs><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'>` +
+    `<stop offset='0' stop-color='${from}'/>` +
+    `<stop offset='1' stop-color='${to}'/>` +
+    `</linearGradient></defs>` +
+    `<rect width='400' height='700' fill='url(%23g)'/>` +
+    `<text x='200' y='380' font-size='220' text-anchor='middle' dominant-baseline='middle'>${emoji}</text>` +
+    `</svg>`;
+  return `data:image/svg+xml;utf8,${svg.replace(/#/g, '%23')}`;
+};
+
 export const characters = [
   {
     id: 'felipe',
@@ -69,7 +90,8 @@ export const characters = [
     ],
     milestone: { days: 7, hitAt: daysAgoISO(5) },
     reactions: { Fogo: 7, 'Força': 3, Cutucar: 1 },
-    activity: { headline: 'Eclético', detail: '3 modalidades diferentes este mês' }
+    activity: { headline: 'Eclético', detail: '3 modalidades diferentes este mês' },
+    lastPhoto: { url: gradientPhoto('#ff7a59', '#f4502f', '🥋'), postedAt: hoursAgoISO(24) }
   },
   {
     id: 'nicole',
@@ -98,7 +120,8 @@ export const characters = [
     ],
     milestone: { days: 14, hitAt: daysAgoISO(9) },
     reactions: { Fogo: 9, 'Força': 4, Cutucar: 0 },
-    activity: { headline: '50 km', detail: 'percorridos este mês' }
+    activity: { headline: '50 km', detail: 'percorridos este mês' },
+    lastPhoto: { url: gradientPhoto('#d4af37', '#8b6f1f', '🏃'), postedAt: hoursAgoISO(3) }
   },
   {
     id: 'ciclano',
@@ -127,6 +150,7 @@ export const characters = [
     ],
     milestone: null,
     reactions: { Fogo: 1, 'Força': 0, Cutucar: 3 },
-    activity: { headline: 'Inativo', detail: 'sem treinos recentes', inactive: true }
+    activity: { headline: 'Inativo', detail: 'sem treinos recentes', inactive: true },
+    lastPhoto: { url: gradientPhoto('#3a3a3a', '#1a1a1a', '🏋'), postedAt: daysAgoISO(5) }
   }
 ];

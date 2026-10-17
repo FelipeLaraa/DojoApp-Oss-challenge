@@ -7,7 +7,6 @@ import {
   Camera,
   ArrowLeft,
   X,
-  MapPin,
   Shield,
   Lock,
   Check,
@@ -20,10 +19,8 @@ import {
   readActivities,
   computeStreak,
   trainedToday,
-  todaySessions,
   storageUsageRatio
 } from '@/lib/activity';
-import { relativeTime } from '@/lib/time';
 
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MB
 const MAX_SIDE = 800;
@@ -70,29 +67,6 @@ const nextMilestone = (streak) => {
   return base + 7;
 };
 
-const Stepper = ({ label, value, onChange, accent }) => (
-  <div className="card-tight p-3 text-center">
-    <div className="text-[10px] uppercase tracking-wider text-neutral-500 mb-1">{label}</div>
-    <div className="flex items-center justify-between gap-1">
-      <button
-        type="button"
-        onClick={() => onChange(Math.max(0, value - 1))}
-        className="w-7 h-7 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-neutral-300 hover:text-white"
-      >
-        <Minus className="w-3.5 h-3.5" />
-      </button>
-      <div className={`text-xl font-bold ${accent || ''}`}>{value}</div>
-      <button
-        type="button"
-        onClick={() => onChange(value + 1)}
-        className="w-7 h-7 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-neutral-300 hover:text-white"
-      >
-        <Plus className="w-3.5 h-3.5" />
-      </button>
-    </div>
-  </div>
-);
-
 const RegisterActivity = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -100,32 +74,21 @@ const RegisterActivity = () => {
   const existing = readActivities(user?.id);
   const streak = useMemo(() => computeStreak(existing), [existing]);
   const doneToday = useMemo(() => trainedToday(existing), [existing]);
-  const todays = useMemo(() => todaySessions(existing), [existing]);
-  const todayTotalMin = todays.reduce((acc, a) => acc + (Number(a.durationMin) || 0), 0);
-  const targetDay = streak + (doneToday ? 0 : 1); // "dia N" a aparecer no CTA após salvar
+  const targetDay = streak + (doneToday ? 0 : 1);
   const milestone = nextMilestone(streak);
+  const prevMilestone = milestone - 7;
+  const progressPct = Math.min(
+    100,
+    Math.max(0, ((streak - prevMilestone) / 7) * 100)
+  );
+  const remaining = Math.max(0, milestone - streak);
 
   const [sport, setSport] = useState(user?.mainSport || 'BJJ');
-  const [duration, setDuration] = useState('');
-  const [local, setLocal] = useState('');
+  const [duration, setDuration] = useState(60);
+  const [comment, setComment] = useState('');
   const [mood, setMood] = useState(null);
-  const [partnerName, setPartnerName] = useState('');
-  const [partnerBelt, setPartnerBelt] = useState('');
-  const [rolls, setRolls] = useState(0);
-  const [submissions, setSubmissions] = useState(0);
-  const [caught, setCaught] = useState(0);
-  const [note, setNote] = useState('');
   const [photo, setPhoto] = useState(null);
   const fileInputRef = useRef(null);
-
-  const isBJJ = sport === 'BJJ';
-
-  // Marcador de dia pros streak dots (0..9 → últimos 7 dias + 3 futuros)
-  const dots = Array.from({ length: 10 }, (_, i) => {
-    if (i < streak) return 'done';
-    if (i === streak) return 'next';
-    return 'future';
-  }).slice(0, 10);
 
   const handleRegister = () => {
     if (storageUsageRatio() >= 0.9) {
@@ -137,14 +100,9 @@ const RegisterActivity = () => {
     const updated = addActivity(user?.id, {
       sport,
       durationMin: duration,
-      note,
-      photo,
-      local: local || null,
+      comment,
       mood,
-      partner: isBJJ && partnerName ? { name: partnerName, belt: partnerBelt || null } : null,
-      rolls: isBJJ ? rolls : null,
-      submissions: isBJJ ? submissions : null,
-      caught: isBJJ ? caught : null
+      photo
     });
     if (!updated) {
       toast({
@@ -196,98 +154,135 @@ const RegisterActivity = () => {
   });
   const timeLabel = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
+  const lit = doneToday;
+
+  // Animação da chama: tremulação contínua, forte se acesa, sutil se apagada.
+  const flameAnim = lit
+    ? {
+        scale: [0.95, 1.05, 0.95],
+        rotate: [-3, 3, -3]
+      }
+    : {
+        scale: [0.98, 1.02, 0.98]
+      };
+  const flameTransition = lit
+    ? { duration: 1.2, repeat: Infinity, ease: 'easeInOut' }
+    : { duration: 2.5, repeat: Infinity, ease: 'easeInOut' };
+
   return (
     <div className="min-h-screen pb-40 dojo-gradient relative">
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        {/* HERO celebrativo */}
-        <div className="register-hero px-5 pt-10 pb-6 relative overflow-hidden">
-          <div className="register-hero-grid" />
-
-          <div className="relative flex items-center justify-between mb-6">
-            <button
-              onClick={() => navigate(-1)}
-              className="w-9 h-9 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-white"
-              aria-label="Voltar"
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </button>
-            <div className="text-[10px] uppercase tracking-[0.2em] text-neutral-400">
-              {dateLabel} · {timeLabel}
-            </div>
-            <div className="w-9" />
-          </div>
-
-          <div className="relative flex flex-col items-center text-center">
-            <div className="flame-badge mb-3">
-              <Flame className="w-8 h-8 text-white" fill="currentColor" />
-            </div>
-            <div className="text-[11px] uppercase tracking-[0.2em] text-orange-300/80 font-semibold mb-1">
-              Sequência viva
-            </div>
-            <div className="text-6xl font-bold leading-none tracking-tight">{streak}</div>
-            <div className="text-sm text-neutral-400 mt-1">
-              {streak === 1 ? 'dia no fogo' : 'dias no fogo'} · próximo marco:{' '}
-              <b className="text-amber-300">{milestone}</b>
-            </div>
-          </div>
-
-          {/* streak dots */}
-          <div className="relative mt-5 flex justify-center gap-1.5">
-            {dots.map((d, i) => (
-              <div
-                key={i}
-                className={
-                  d === 'done'
-                    ? 'w-6 h-1.5 rounded-full bg-orange-500'
-                    : d === 'next'
-                    ? 'w-6 h-1.5 rounded-full bg-orange-500/40 ring-2 ring-orange-400'
-                    : 'w-6 h-1.5 rounded-full bg-white/10'
-                }
-              />
-            ))}
-          </div>
-
-          {/* Chip "hoje garantido" — ancora o dia dentro da celebração da streak */}
-          {todays.length >= 1 && (
-            <div className="relative mt-4 flex justify-center">
-              <span className="inline-flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 text-[11px] font-semibold px-2.5 py-1 rounded-full">
-                <Check className="w-3 h-3" />
-                hoje garantido
-                {todays.length > 1 && ` · ${todays.length}ª sessão`}
-              </span>
-            </div>
-          )}
+        {/* Header: back + date pill */}
+        <div className="flex items-center justify-between px-5 pt-5 pb-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white"
+            aria-label="Voltar"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <span className="date-pill">{dateLabel} · {timeLabel}</span>
+          <div className="w-9" />
         </div>
 
-        {/* Timeline das sessões de hoje — meta-info discreta antes do form */}
-        {todays.length >= 1 && (
-          <div className="px-5 pt-3 pb-1 flex items-center justify-between">
-            <div className="text-[10px] uppercase tracking-wider text-neutral-500">Hoje</div>
-            <div className="flex-1 mx-4 flex items-center gap-2">
-              {todays.map((a, i) => (
-                <React.Fragment key={i}>
-                  <div className="flex flex-col items-center gap-0.5">
-                    <div className="w-2 h-2 rounded-full bg-neutral-400" />
-                    <div className="text-[10px] text-neutral-500">
-                      {new Date(a.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                    </div>
-                  </div>
-                  {i < todays.length - 1 && <div className="flex-1 h-px bg-neutral-700" />}
-                </React.Fragment>
-              ))}
-            </div>
-            {todayTotalMin > 0 && (
-              <div className="text-[10px] uppercase tracking-wider text-neutral-500 whitespace-nowrap">
-                {todayTotalMin >= 60
-                  ? `${Math.floor(todayTotalMin / 60)}h${String(todayTotalMin % 60).padStart(2, '0')} total`
-                  : `${todayTotalMin}min total`}
+        {/* HERO card (Nicole) */}
+        <div className="px-5">
+          <div className={`hero-card ${lit ? '' : 'dim'}`}>
+            <div className="hero-card-inner px-5 pt-5 pb-6">
+              <div className="hero-grid-mini" />
+
+              {/* Header: label + chip integrado */}
+              <div className="relative flex items-center justify-between">
+                <span
+                  className="section-label"
+                  style={{ color: lit ? '#fcd34d' : '#a3a3a3' }}
+                >
+                  {lit ? 'Sequência viva' : 'Sequência em risco'}
+                </span>
+                <span className={`today-chip ${lit ? 'go' : 'warn'}`}>
+                  <span className="dot" />
+                  {lit ? 'hoje garantido' : 'falta hoje'}
+                </span>
               </div>
-            )}
+
+              {/* Chama + número grudados */}
+              <div className="relative mt-4 flex items-end justify-center gap-3">
+                <motion.svg
+                  className="flame-icon"
+                  width="68"
+                  height="88"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                  animate={flameAnim}
+                  transition={flameTransition}
+                  style={{
+                    originX: 0.5,
+                    originY: 0.9,
+                    opacity: lit ? 1 : 0.55
+                  }}
+                >
+                  <defs>
+                    <linearGradient id="flameLit" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#fde047" />
+                      <stop offset="55%" stopColor="#f97316" />
+                      <stop offset="100%" stopColor="#dc2626" />
+                    </linearGradient>
+                    <linearGradient id="flameDim" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#d4d4d8" />
+                      <stop offset="100%" stopColor="#737373" />
+                    </linearGradient>
+                  </defs>
+                  <path
+                    d="M8.5 14.5A2.5 2.5 0 0 0 11 17c1.38 0 2.5-1.12 2.5-2.5 0-1.74-1.5-2-1.5-4.5 0 0-3.5.5-3.5 4.5zM12 2s4 5 4 9a4 4 0 0 1-8 0c0-1.5.5-2.5 1-3.5C10 5 12 2 12 2z"
+                    fill={lit ? 'url(#flameLit)' : 'url(#flameDim)'}
+                  />
+                </motion.svg>
+                <div className={`streak-number ${lit ? '' : 'dim'}`}>{streak}</div>
+              </div>
+
+              <div className="relative text-center mt-1 text-[13px] text-neutral-400">
+                {lit
+                  ? streak === 1 ? 'dia no fogo' : 'dias no fogo'
+                  : 'dias · hoje ainda não'}
+              </div>
+
+              {/* Barra de progresso ao próximo marco */}
+              <div className="relative mt-5">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] uppercase tracking-wider text-neutral-500">
+                    próximo marco
+                  </span>
+                  <span
+                    className={`text-[11px] font-semibold ${lit ? 'text-amber-300' : 'text-neutral-400'}`}
+                  >
+                    {milestone} dias{' '}
+                    <span className="text-neutral-500 font-normal">
+                      · faltam {remaining}
+                    </span>
+                  </span>
+                </div>
+                <div className="milestone-track">
+                  <div
+                    className={`milestone-fill ${lit ? '' : 'dim'}`}
+                    style={{ width: `${progressPct}%` }}
+                  />
+                  <div className="milestone-tick" />
+                </div>
+              </div>
+            </div>
           </div>
-        )}
+
+          <div
+            className={`text-center mt-3 text-[11px] ${
+              lit ? 'text-neutral-500' : 'text-amber-300/80'
+            }`}
+          >
+            {lit ? 'bateu hoje · agora é segurar amanhã' : 'registra agora pra não quebrar'}
+          </div>
+        </div>
 
         {/* ESSENCIAL */}
         <div className="px-5 pt-6 space-y-4">
@@ -314,39 +309,38 @@ const RegisterActivity = () => {
             </div>
           </div>
 
-          {/* Duração + Local */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="card-tight p-3">
-              <div className="text-[10px] uppercase tracking-wider text-neutral-500 mb-1">
-                Duração
-              </div>
+          {/* Duração com stepper visual */}
+          <div className="card-tight p-4">
+            <div className="text-[10px] uppercase tracking-wider text-neutral-500 mb-3">
+              Duração
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => setDuration(Math.max(0, Number(duration || 0) - 5))}
+                className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-neutral-300 hover:text-white"
+                aria-label="Diminuir 5 minutos"
+              >
+                <Minus className="w-4 h-4" />
+              </button>
               <div className="flex items-baseline gap-1">
                 <input
                   type="number"
                   inputMode="numeric"
                   value={duration}
                   onChange={(e) => setDuration(e.target.value)}
-                  placeholder="60"
-                  className="w-16 bg-transparent text-2xl font-bold outline-none text-white"
+                  className="w-20 bg-transparent text-4xl font-bold outline-none text-white text-center"
                 />
                 <span className="text-xs text-neutral-500">min</span>
               </div>
-            </div>
-            <div className="card-tight p-3">
-              <div className="text-[10px] uppercase tracking-wider text-neutral-500 mb-1">
-                Local
-              </div>
-              <input
-                type="text"
-                value={local}
-                onChange={(e) => setLocal(e.target.value)}
-                placeholder="Onde treinou?"
-                className="w-full bg-transparent text-sm font-medium outline-none text-white placeholder:text-neutral-600"
-              />
-              <div className="text-[11px] text-neutral-500 mt-1 flex items-center gap-1">
-                <MapPin className="w-2.5 h-2.5" />
-                opcional
-              </div>
+              <button
+                type="button"
+                onClick={() => setDuration(Number(duration || 0) + 5)}
+                className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-neutral-300 hover:text-white"
+                aria-label="Aumentar 5 minutos"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
             </div>
           </div>
 
@@ -367,115 +361,64 @@ const RegisterActivity = () => {
               ))}
             </div>
           </div>
-        </div>
 
-        {/* TÉCNICO · BJJ — só aparece se modalidade = BJJ */}
-        {isBJJ && (
-          <div className="px-5 pt-7 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="section-label">Técnico · BJJ</div>
-              <div className="text-[10px] text-neutral-500">o que você treinou</div>
+          {/* Comente algo sobre isso */}
+          <div className="card-tight p-3">
+            <div className="text-[10px] uppercase tracking-wider text-neutral-500 mb-1">
+              Comente algo
             </div>
+            <input
+              type="text"
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              maxLength={240}
+              placeholder="Como foi o treino de hoje?"
+              className="w-full bg-transparent text-sm font-medium outline-none text-white placeholder:text-neutral-600"
+            />
+          </div>
 
-            {/* Parceiro */}
-            <div className="card-tight p-3">
-              <div className="text-[10px] uppercase tracking-wider text-neutral-500 mb-2">
-                Parceiro de treino
-              </div>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={partnerName}
-                  onChange={(e) => setPartnerName(e.target.value)}
-                  placeholder="Nome"
-                  className="flex-1 bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-neutral-600 outline-none focus:border-red-500/50"
-                />
-                <input
-                  type="text"
-                  value={partnerBelt}
-                  onChange={(e) => setPartnerBelt(e.target.value)}
-                  placeholder="Faixa"
-                  className="w-24 bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-neutral-600 outline-none focus:border-red-500/50"
-                />
-              </div>
-            </div>
-
-            {/* Contadores */}
+          {/* Prova do dia (foto) */}
+          <div>
+            <div className="text-xs text-neutral-400 mb-2">Prova do dia</div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png"
+              onChange={handlePhotoChange}
+              className="hidden"
+            />
             <div className="grid grid-cols-3 gap-2">
-              <Stepper label="Rolas" value={rolls} onChange={setRolls} />
-              <Stepper
-                label="Finaliz."
-                value={submissions}
-                onChange={setSubmissions}
-                accent="text-emerald-400"
-              />
-              <Stepper
-                label="Pego"
-                value={caught}
-                onChange={setCaught}
-                accent="text-neutral-400"
-              />
-            </div>
-
-            {/* Nota */}
-            <div className="card-tight p-4">
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-xs text-neutral-400">O que aprendi hoje</div>
-                <div className="text-[10px] text-neutral-600">{note.length}/240</div>
-              </div>
-              <textarea
-                value={note}
-                maxLength={240}
-                rows={3}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="Insights, erros, o que vai treinar de novo…"
-                className="w-full bg-transparent text-sm leading-relaxed text-neutral-200 placeholder:text-neutral-600 outline-none resize-none"
-              />
-            </div>
-
-            {/* Prova do dia (foto) */}
-            <div>
-              <div className="text-xs text-neutral-400 mb-2">Prova do dia</div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/png"
-                onChange={handlePhotoChange}
-                className="hidden"
-              />
-              <div className="grid grid-cols-3 gap-2">
-                {photo ? (
-                  <div className="aspect-square rounded-xl overflow-hidden relative bg-black border border-white/10">
-                    <img src={photo} alt="Prova do treino" className="w-full h-full object-cover" />
-                    <button
-                      type="button"
-                      onClick={handleRemovePhoto}
-                      className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/70 flex items-center justify-center text-white"
-                      aria-label="Remover foto"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                ) : (
+              {photo ? (
+                <div className="aspect-square rounded-xl overflow-hidden relative bg-black border border-white/10">
+                  <img src={photo} alt="Prova do treino" className="w-full h-full object-cover" />
                   <button
                     type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="aspect-square rounded-xl border border-dashed border-white/15 flex flex-col items-center justify-center gap-1 text-neutral-500 hover:text-red-300 hover:border-red-500/50 transition-colors"
+                    onClick={handleRemovePhoto}
+                    className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/70 flex items-center justify-center text-white"
+                    aria-label="Remover foto"
                   >
-                    <Camera className="w-5 h-5" />
-                    <span className="text-[10px]">+ foto</span>
+                    <X className="w-3 h-3" />
                   </button>
-                )}
-                <div className="aspect-square rounded-xl border border-dashed border-white/10 flex items-center justify-center text-neutral-700 text-[10px]">
-                  vazio
                 </div>
-                <div className="aspect-square rounded-xl border border-dashed border-white/10 flex items-center justify-center text-neutral-700 text-[10px]">
-                  vazio
-                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="aspect-square rounded-xl border border-dashed border-white/15 flex flex-col items-center justify-center gap-1 text-neutral-500 hover:text-red-300 hover:border-red-500/50 transition-colors"
+                >
+                  <Camera className="w-5 h-5" />
+                  <span className="text-[10px]">+ foto</span>
+                </button>
+              )}
+              <div className="aspect-square rounded-xl border border-dashed border-white/10 flex items-center justify-center text-neutral-700 text-[10px]">
+                vazio
+              </div>
+              <div className="aspect-square rounded-xl border border-dashed border-white/10 flex items-center justify-center text-neutral-700 text-[10px]">
+                vazio
               </div>
             </div>
           </div>
-        )}
+        </div>
 
         {/* PRO borrado — teaser */}
         <div className="px-5 pt-7 pb-6">

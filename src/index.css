@@ -314,6 +314,102 @@ body {
 }
 @keyframes flame-spin { to { transform: rotate(360deg); } }
 
+/* Hero card novo — Nicole */
+.hero-card {
+  position: relative;
+  border-radius: 28px;
+  padding: 1px;
+  background: linear-gradient(180deg, rgba(245,178,61,0.75) 0%, rgba(200,140,28,0.25) 55%, rgba(245,178,61,0.05) 100%);
+  box-shadow:
+    0 20px 60px -20px rgba(245,178,61,0.25),
+    inset 0 0 0 1px rgba(0,0,0,0.2);
+}
+.hero-card.dim {
+  background: linear-gradient(180deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.04) 60%, rgba(255,255,255,0.02) 100%);
+  box-shadow: 0 20px 60px -20px rgba(0,0,0,0.4);
+}
+.hero-card-inner {
+  position: relative;
+  border-radius: 27px;
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(249,115,22,0.14) 0%, rgba(0,0,0,0) 55%),
+    linear-gradient(180deg, #141414 0%, #0d0d0d 100%);
+  overflow: hidden;
+}
+.hero-card.dim .hero-card-inner {
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0) 55%),
+    linear-gradient(180deg, #141414 0%, #0d0d0d 100%);
+}
+.hero-grid-mini {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 22px 22px;
+  -webkit-mask-image: radial-gradient(60% 70% at 50% 30%, #000 0%, transparent 85%);
+          mask-image: radial-gradient(60% 70% at 50% 30%, #000 0%, transparent 85%);
+  pointer-events: none;
+}
+.streak-number {
+  font-weight: 800;
+  font-size: 88px;
+  line-height: 0.85;
+  letter-spacing: -0.04em;
+  background: linear-gradient(180deg, #fff 0%, #ffe8c7 55%, #f5b23d 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.streak-number.dim {
+  background: linear-gradient(180deg,#fff,#d4d4d8);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.flame-icon { filter: drop-shadow(0 6px 18px rgba(249,115,22,0.45)); }
+.milestone-track {
+  position: relative;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.06);
+  overflow: hidden;
+}
+.milestone-fill {
+  position: absolute; left: 0; top: 0; bottom: 0;
+  background: linear-gradient(90deg, #f97316 0%, #f5b23d 100%);
+  border-radius: 999px;
+  box-shadow: 0 0 12px rgba(245,178,61,0.5);
+}
+.milestone-fill.dim {
+  background: linear-gradient(90deg, #737373 0%, #a3a3a3 100%);
+  box-shadow: none;
+}
+.milestone-tick {
+  position: absolute; top: -3px; right: 0; height: 12px; width: 2px;
+  background: rgba(245,178,61,0.9);
+  border-radius: 2px;
+}
+.today-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 10.5px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 5px 10px; border-radius: 999px;
+  backdrop-filter: blur(6px);
+}
+.today-chip.go { color: #4ade80; background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.35); }
+.today-chip.warn { color: #f5b23d; background: rgba(245,178,61,0.1); border: 1px solid rgba(245,178,61,0.35); }
+.today-chip .dot { width: 6px; height: 6px; border-radius: 999px; }
+.today-chip.go .dot { background: #22c55e; box-shadow: 0 0 10px #22c55e; }
+.today-chip.warn .dot { background: #f5b23d; box-shadow: 0 0 10px #f5b23d; }
+.date-pill {
+  font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
+  color: #a3a3a3;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 7px 12px; border-radius: 999px;
+}
+
 .card {
   background: linear-gradient(180deg, #17181b 0%, #1d1f23 100%);
   border: 1px solid rgba(255,255,255,.06);

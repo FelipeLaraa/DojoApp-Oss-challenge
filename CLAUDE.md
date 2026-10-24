@@ -21,7 +21,9 @@ Futuro possível: juntar o lado social (amigo-pra-amigo) com check-in em academi
 
 Base gerada por vibe coding (Hostinger Horizons), reconstruída peça a peça.
 Stack: React 18 + Vite 4, Tailwind, react-router, framer-motion, lucide-react.
-Persistência: localStorage, com MEMÓRIA POR PERFIL (chave dojoProfile_<id>).
+Persistência: localStorage, com MEMÓRIA POR PERFIL (chave dojoProfile_<id>) e
+treinos por perfil (chave dojoActivities_<id>, em src/lib/activity.js).
+PWA instalável (manifest + service worker em public/, registrado em main.jsx).
 NÃO existe ainda: backend, banco de dados, autenticação real.
 
 Telas funcionando:
@@ -31,15 +33,25 @@ Telas funcionando:
 - Perfil: foto da galeria, @usuário, biografia (150 chars), modalidade principal,
   molduras temáticas por esporte (Luta/Levantamento/Corrida/Natação) com emblema.
   Ordem: foto, informações/bio, molduras, progresso, estatísticas, salvar.
-- Amigos: feed dos amigos com status, enviar incentivo (item + mensagem), perfil
-  público do atleta (/athlete/:id), notificações recebidas.
-- Home (feed social): seu resumo + botão Registrar (placeholder), "Precisa de um
-  empurrão" (inativos), feed de atividade dos amigos. 3 reações de 1 toque
-  (Fogo/Força/Cutucar). Sininho de notificações com badge + responder/devolver.
-- Navegação: lateral no desktop, inferior no mobile. Aba Amigos incluída.
+- Treinar (/register): REGISTRAR ATIVIDADE funciona — modalidade, duração,
+  humor, comentário e foto (comprimida). Grava em dojoActivities_<id> e calcula
+  sequência (streak), tira de frequência da semana e "treinou hoje" de verdade.
+- Home ("Seu dia"): stories da semana, escudo com sequência, botão "Treinei hoje"
+  (leva ao /register) e resumo (sequência, semana, último/hoje) — tudo real.
+  Dropdown de atalho leva à aba Amigos. Sininho de notificações com badge,
+  filtro Novas/Todas, responder/devolver fogo.
+- Amigos: stories dos amigos, marco de sequência, mini-ranking da semana,
+  lista de amigos, enviar incentivo (frases prontas ou mensagem própria),
+  perfil público do atleta (/athlete/:id, somente leitura).
+- Ranking: só amigos, por frequência semanal (empate: maior sequência). Os
+  dados do usuário logado são reais; os dos amigos são fixos.
+- Navegação: barra inferior flutuante (Home, Agenda, Treinar, Ranking, Amigos,
+  Perfil). Telas legadas de academia (Agenda, Professor, Academia) ainda existem.
 
-Dados fixos que viram reais quando houver "Registrar atividade": status
-(50 km, 4 dias, etc.), tempos ("há 3 h"), estatísticas do perfil.
+Dados reais (vêm do "Registrar"): sequência, semana, "treinou hoje", tempos.
+Ainda fixos: dados dos amigos (streak, semana, mês, status em characters.js) e
+contadores de reação; no Perfil, as estatísticas (47 aulas, #12) e a barra de
+progresso de faixa (20/60).
 
 ## Modo de trabalho (combinado com o Felipe)
 
@@ -68,16 +80,18 @@ como escritas.
 
 - Renan Nagami (.claude/agents/renan-nagami.md): desenvolvedor. Técnico,
   analítico, poucas palavras, didático. Para antes de corrigir erros e pergunta.
-- A criar quando as telas-núcleo estiverem de pé: agente DESIGNER (contestador
-  criativo, cara premium — cores, tipografia, conceito). Mandato de discordar.
+- Nicole (.claude/agents/nicole.md): designer. Contestadora criativa, opiniosa,
+  mandato de discordar; cuida de hierarquia, respiro e peso visual.
 - A criar quando entrar backend: code-reviewer e security-auditor (ver repo
   addyosmani/agent-skills). O security vira obrigatório com dados/senhas.
 
 ## Próximos passos
 
-1. Registrar atividade — torna os status e tempos reais (destrava a gamificação).
-2. Agente designer — cara premium depois do núcleo pronto.
+1. Enriquecer a Home e tornar reais os restos fixos (metas semanais, estatísticas
+   e progresso do Perfil) — detalhes no HANDOFF.md.
+2. Refino visual com a Nicole (designer) em cima do núcleo pronto.
 3. Backend (Supabase) — login real, dados multi-aparelho; aí entram os revisores.
+(Registrar atividade e PWA já estão feitos.)
 
 ## Pendências anotadas
 

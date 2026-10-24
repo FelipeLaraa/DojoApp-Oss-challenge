@@ -4,7 +4,7 @@
 > frontend, nada funciona"). Aquele retrato está DESATUALIZADO. Abaixo, o que
 > realmente funciona hoje, testado no navegador pelo Felipe.
 
-Data: outubro/2026. Leia junto com o CLAUDE.md.
+Data: 2026-10-24 (código conferido até o commit 8b47001, de 16/10/2026). Leia junto com o CLAUDE.md.
 
 ## Resumo em uma linha
 
@@ -32,17 +32,17 @@ Login:
   carregando o perfil salvo dele se já tiver sido editado.
 
 Hub social (o coração do app):
-- Home é um feed social (sem posts, sem curtidas): seu resumo + "Precisa de um
-  empurrão" (amigos inativos) + feed de atividade dos amigos.
-- 3 reações de 1 toque em cada card: Fogo, Força, Cutucar. Cada toque envia a
-  reação ao amigo.
-- Enviar reação/incentivo GRAVA uma notificação no perfil do amigo
+- Home ("Seu dia", /student) é o resumo pessoal: stories da semana, escudo com
+  sequência, botão "Treinei hoje" e resumo (sequência, semana, último/hoje).
+  Um dropdown no topo leva à aba Amigos. Sem posts, sem curtidas.
+- Aba Amigos: stories dos amigos, "Marco de hoje", ranking da semana, lista de
+  amigos e envio de incentivo (frases prontas ou mensagem própria).
+- Enviar incentivo GRAVA uma notificação no perfil do amigo
   (`dojoNotifications_<id>`). O ciclo é real entre perfis.
-- Sininho de notificações no topo da Home, com badge de não lidas. Abre painel,
-  marca como visto.
+- Sininho de notificações (Home e Amigos), com badge de não lidas e painel com
+  filtro Novas/Todas.
 - Quem recebe pode responder na hora: "Devolver fogo" e "Responder" (mensagem).
   A resposta volta pro sininho de quem começou. Loop social fechado nos 2 sentidos.
-- Aba Amigos: feed + enviar incentivo (item + mensagem) + notificações recebidas.
 - Perfil público do atleta (`/athlete/:id`): clicar num amigo abre o perfil dele
   (status, bio, estatísticas), somente leitura.
 
@@ -50,26 +50,46 @@ Molduras temáticas por esporte: Luta, Levantamento, Corrida, Natação — cada
 com cor própria e um emblema (SVG) no canto. (São pequenas de propósito; o
 refino visual fica pro agente designer.)
 
-Navegação: lateral no desktop, inferior no mobile.
+Registrar atividade (/register, aba "Treinar") — FEITO e real:
+- Modalidade, duração, humor, comentário e foto do treino (comprimida em canvas,
+  máx. 800 px). Grava em `dojoActivities_<id>` (src/lib/activity.js).
+- Daí saem de verdade: sequência (streak), tira/stories da semana, "treinou
+  hoje", várias sessões no mesmo dia agregadas, "há Xh" (src/lib/time.js).
+- Aviso quando o localStorage está quase cheio (fotos pesam).
+- Bloco "PRO · competidor" é só teaser ("em breve").
+
+Ranking (/ranking): só amigos, por frequência semanal; os dados do usuário
+logado vêm dos treinos registrados.
+
+PWA: manifest, ícones SVG e service worker (cache-first) em `public/`; registrado
+em `src/main.jsx`. O app já pode ser instalado na tela inicial do celular.
+
+Navegação: barra inferior flutuante (Home, Agenda, Treinar, Ranking, Amigos,
+Perfil). Telas legadas da era academia ainda existem (Agenda, Professor, Academia).
 
 Build: `npm run build` passa limpo. Rode sempre antes de commitar.
 
 ## O que é FIXO/placeholder (ainda não é dado real)
 
-- Status de atividade dos personagens (50 km, 4 dias, Inativo) — fixos em
-  characters.js.
-- Tempos no feed ("há 3 h") — fixos.
-- Estatísticas numéricas do perfil (47 aulas, #12 ranking) — fixas.
-- Botão "Registrar" na Home — placeholder (mostra toast).
-- Barra de progresso de faixa — usa valores padrão.
+- Dados dos AMIGOS (streak, semana, mês de 30 dias, status/"Último treino",
+  marco) — fixos em characters.js. Só o usuário logado tem dados reais.
+- Contadores de reação (src/lib/reactions.js) — o módulo existe mas nenhuma tela
+  o usa mais (os cards de reação saíram do feed); pode ser removido ou reaproveitado.
+- Estatísticas numéricas do Perfil (47 aulas, 20/60, 4.8, #12) — fixas.
+- Barra de progresso de faixa ("aulas") — usa valores padrão.
+- Perfil público do atleta: "semana atual" é derivada do `month` fixo.
+- Foto do treino é salva só no aparelho (localStorage).
 
-Tudo isso vira real quando a tela "Registrar atividade" existir.
+Home e Treinar já usam dados reais; o que falta virar real é o lado dos amigos
+(depende de backend) e as estatísticas do Perfil.
 
 ## Arquitetura de dados (hoje)
 
 Sem backend. Tudo em localStorage:
 - `dojoUser` / `dojoUserType` — sessão atual.
 - `dojoProfile_<id>` — memória permanente de cada perfil (sobrevive a logout).
+- `dojoActivities_<id>` — treinos registrados (data, modalidade, duração, humor, foto...).
+- `dojoReactSent_<id>` / `dojoReactionDeltas` — controle de reações (hoje sem uso na UI).
 - `dojoNotifications_<id>` — notificações recebidas por perfil.
 - `dojoNotifSeen_<id>` — timestamp do último visto (badge de não lidas).
 
@@ -80,15 +100,16 @@ real só com backend (Supabase), que é um passo futuro.
 
 ### Curto prazo — enriquecer a Home (o Felipe pediu, 13/10/2026)
 
-A Home ganhou peças importantes (streak, tira de frequência, contador de
-reações com limite), mas ainda está simples. Sugestões, por impacto × esforço:
+A Home já tem registro real, streak, stories da semana e "Treinei hoje"
+(itens B e E abaixo estão em boa parte feitos), mas ainda pode crescer.
+Sugestões, por impacto × esforço:
 
 A. REMOVER / SUBSTITUIR a "20/60 aulas · 33%" do resumo
    É resquício do app-academia antigo. Hoje confunde — "aulas" não faz sentido
    num hub genérico. Opções: substituir por "meta da semana" (ex: 4 treinos,
    1/4 ✓) OU remover até existir meta real.
 
-B. "Treinou hoje?" em destaque no resumo
+B. "Treinou hoje?" em destaque no resumo — FEITO (botão "Treinei hoje" no hero)
    Antes do treino de hoje: botão grande "Treinei hoje" direto no resumo.
    Depois do treino: "✓ Treino de hoje · há Xh · Natação" como memória.
    Pequeno, muda MUITO a sensação de uso diário.
@@ -100,7 +121,7 @@ D. Marcos de sequência celebrados
    7 / 14 / 30 / 100 dias ganham badge visual (brilho, confete, cor especial)
    em vez de só mudar o número do hit. Hoje 1 e 42 têm "o mesmo peso visual".
 
-E. "Último treino" no resumo
+E. "Último treino" no resumo — PARCIAL (coluna "Último/Hoje" mostra só o tempo)
    Linha curta: "último: há 2h · Natação · 45 min". Transforma o registro em
    memória viva, não só número que subiu.
 
@@ -109,7 +130,8 @@ F. Hierarquia no feed
    (streak subindo) ganha ênfase. Hoje tudo tem o mesmo peso.
 
 G. Perfil público do atleta (/athlete/:id) ganha a tira de frequência
-   Já aparece na Home e Ranking. Falta esse último lugar.
+   Já aparece na Home e Ranking. O perfil tem os stories da semana (dados
+   fixos), mas ainda não a tira de frequência.
 
 ### Médio prazo
 
@@ -123,9 +145,9 @@ I. Ideia guardada: moldura reage à ausência
    voltar. Liga visualmente com o streak. Conversamos sobre isso em 13/10;
    encaixa depois do loop registro+streak estar bem assentado.
 
-J. Agente DESIGNER (contestador criativo, cara premium)
-   Já previsto no CLAUDE.md. Com a Home esticada, é a hora dele passar o olho
-   crítico (cores, tipografia, hierarquia visual, conceito). Mandato de
+J. Agente DESIGNER (contestador criativo, cara premium) — CRIADO: Nicole
+   (.claude/agents/nicole.md). Já redesenhou notificações, Amigos e Treinar.
+   Segue passando o olho crítico (cores, tipografia, hierarquia visual, conceito). Mandato de
    discordar; não é "fazer bonito", é desafiar escolhas.
 
 ### Longo prazo
@@ -144,7 +166,8 @@ O app já foi construído mobile-first (viewport 375px, nav flutuante, touch
 targets grandes). O trabalho pesado já está feito. Rota recomendada, do
 mais fácil pro mais trabalhoso:
 
-1. **PWA** (grátis, 1-2h). Adicionar manifest + service worker. O usuário
+1. **PWA** (grátis, 1-2h) — JÁ FEITO em 16/10/2026 (manifest + service worker
+   em `public/`). O usuário
    abre o app no navegador do celular → "Adicionar à tela inicial" → vira
    ícone com splash, abre fullscreen sem barra do navegador, funciona
    offline. Zero loja, zero custo. Limite: notificação push limitada no

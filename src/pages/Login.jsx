@@ -4,95 +4,85 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
-import { User, GraduationCap, Building2 } from 'lucide-react';
-import { characters } from '@/data/characters';
-import ShieldProfile from '@/components/ShieldProfile';
+
+const USERNAME_RE = /^[a-z0-9_]+$/;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const Login = () => {
-  const [selectedType, setSelectedType] = useState('');
+  const [mode, setMode] = useState('signin'); // 'signin' | 'signup'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login } = useAuth();
+  const [confirm, setConfirm] = useState('');
+  const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
 
-  const userTypes = [
-    { id: 'student', label: 'Aluno', icon: User, route: '/student' },
-    { id: 'teacher', label: 'Professor', icon: GraduationCap, route: '/teacher' },
-    { id: 'academy', label: 'Academia', icon: Building2, route: '/academy' }
-  ];
+  const showError = (title, description) => {
+    toast({ title, description, variant: 'destructive' });
+  };
 
-  // Carrega o que foi salvo de cada personagem (foto, moldura, faixa) para a
-  // entrada rápida refletir o perfil atual, não os dados fixos iniciais.
-  const mergeSaved = (character) => {
-    try {
-      const saved = localStorage.getItem(`dojoProfile_${character.id}`);
-      return saved ? { ...character, ...JSON.parse(saved) } : character;
-    } catch {
-      return character;
+  const validateSignUp = () => {
+    if (!name.trim()) return 'Informe seu nome.';
+    if (!USERNAME_RE.test(username) || username.length < 3) {
+      return '@usuário: só minúsculas, números e _ (mínimo 3 caracteres).';
     }
+    if (!EMAIL_RE.test(email)) return 'E-mail inválido.';
+    if (password.length < 8) return 'Senha precisa ter pelo menos 8 caracteres.';
+    if (password !== confirm) return 'As senhas não conferem.';
+    return null;
   };
 
-  const displayCharacters = characters.map(mergeSaved);
-
-  const handleCharacterLogin = (character) => {
-    // Se esse perfil já foi editado antes, carrega o que foi salvo (foto, etc.).
-    const saved = localStorage.getItem(`dojoProfile_${character.id}`);
-    const userData = saved ? JSON.parse(saved) : {
-      id: character.id,
-      name: character.name,
-      email: `${character.id}@dojo.app`,
-      belt: character.belt,
-      frame: character.frame,
-      years: character.years,
-      weight: character.weight,
-      height: character.height,
-      modality: character.modality,
-      classesAttended: character.classesAttended,
-      bio: character.bio,
-      roleLabel: character.roleLabel,
-      progress: 20,
-      maxProgress: 60
-    };
-    login(userData, 'student');
-    navigate('/student');
-    toast({
-      title: `Bem-vindo, ${character.name}!`,
-      description: character.roleLabel
-    });
+  const validateSignIn = () => {
+    if (!EMAIL_RE.test(email)) return 'E-mail inválido.';
+    if (!password) return 'Informe a senha.';
+    return null;
   };
 
-  const handleLogin = () => {
-    if (!selectedType || !email || !password) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Preencha todos os campos para continuar",
-        variant: "destructive"
-      });
+  const handleSubmit = async () => {
+    if (submitting) return;
+
+    const err = mode === 'signup' ? validateSignUp() : validateSignIn();
+    if (err) {
+      showError('Confira os campos', err);
       return;
     }
 
-    const userData = {
-      id: Date.now(),
-      email,
-      name: email.split('@')[0],
-      belt: selectedType === 'student' ? 'Branca' : null,
-      years: selectedType === 'student' ? 1 : 5,
-      weight: selectedType === 'student' ? 70 : null,
-      height: selectedType === 'student' ? 175 : null,
-      progress: selectedType === 'student' ? 20 : null,
-      maxProgress: selectedType === 'student' ? 60 : null
-    };
-
-    login(userData, selectedType);
-    
-    const selectedRoute = userTypes.find(type => type.id === selectedType)?.route;
-    navigate(selectedRoute);
-    
-    toast({
-      title: "Login realizado!",
-      description: `Bem-vindo ao Dojo App!`
-    });
+    setSubmitting(true);
+    try {
+      if (mode === 'signup') {
+        const { error } = await signUp({
+          email: email.trim(),
+          password,
+          name: name.trim(),
+          username: username.trim().toLowerCase(),
+        });
+        if (error) {
+          showError('Não foi possível criar a conta', error.message);
+          return;
+        }
+        toast({
+          title: 'Conta criada!',
+          description: 'Confira seu e-mail se o Supabase pedir confirmação.',
+        });
+        navigate('/student');
+      } else {
+        const { error } = await signIn({ email: email.trim(), password });
+        if (error) {
+          showError('Falha ao entrar', error.message);
+          return;
+        }
+        navigate('/student');
+      }
+    } catch (e) {
+      showError('Erro inesperado', e.message ?? String(e));
+    } finally {
+      setSubmitting(false);
+    }
   };
+
+  const isSignUp = mode === 'signup';
 
   return (
     <div className="min-h-screen flex flex-col justify-center p-6 dojo-gradient">
@@ -106,92 +96,109 @@ const Login = () => {
           <span className="text-3xl font-bold text-white">道</span>
         </div>
         <h1 className="text-3xl font-bold mb-2">Dojo App</h1>
-        <p className="text-gray-300">Academia de Artes Marciais</p>
+        <p className="text-gray-300">Hub social de atividade física</p>
       </motion.div>
 
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.2 }}
-        className="space-y-6"
+        className="space-y-5 max-w-sm w-full mx-auto"
       >
+        {/* Toggle entre Entrar / Criar conta */}
+        <div className="grid grid-cols-2 gap-2 p-1 bg-gray-800 rounded-lg">
+          <button
+            type="button"
+            onClick={() => setMode('signin')}
+            className={`py-2 rounded-md text-sm font-medium transition ${
+              !isSignUp ? 'bg-red-500 text-white' : 'text-gray-300'
+            }`}
+          >
+            Entrar
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode('signup')}
+            className={`py-2 rounded-md text-sm font-medium transition ${
+              isSignUp ? 'bg-red-500 text-white' : 'text-gray-300'
+            }`}
+          >
+            Criar conta
+          </button>
+        </div>
+
+        {isSignUp && (
+          <>
+            <div>
+              <label className="block text-sm font-medium mb-2">Nome</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full p-3 rounded-lg bg-gray-800 border border-gray-600 focus:border-red-500 focus:outline-none"
+                placeholder="Seu nome"
+                autoComplete="name"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">@usuário</label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value.toLowerCase())}
+                className="w-full p-3 rounded-lg bg-gray-800 border border-gray-600 focus:border-red-500 focus:outline-none"
+                placeholder="felipe_lara"
+                autoComplete="username"
+              />
+            </div>
+          </>
+        )}
+
         <div>
-          <label className="block text-sm font-medium mb-2">Entrada rápida (demonstração)</label>
-          <div className="grid grid-cols-4 gap-2">
-            {displayCharacters.map((character) => (
-              <button
-                key={character.id}
-                onClick={() => handleCharacterLogin(character)}
-                className="flex flex-col items-center p-2 rounded-lg border border-gray-700 hover:border-red-500 hover:bg-red-500/10 transition-all"
-              >
-                <ShieldProfile type={character.frame} emblem={character.emblem} hit={character.streak} size="small" photo={character.photo} />
-                <span className="text-xs mt-2 font-medium">{character.name}</span>
-                <span className="text-[10px] text-gray-400">{character.belt}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="flex-1 h-px bg-gray-700"></div>
-          <span className="text-xs text-gray-500">ou entre manualmente</span>
-          <div className="flex-1 h-px bg-gray-700"></div>
+          <label className="block text-sm font-medium mb-2">E-mail</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full p-3 rounded-lg bg-gray-800 border border-gray-600 focus:border-red-500 focus:outline-none"
+            placeholder="seu@email.com"
+            autoComplete="email"
+          />
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">Tipo de Usuário</label>
-          <div className="grid grid-cols-3 gap-3">
-            {userTypes.map((type) => (
-              <button
-                key={type.id}
-                onClick={() => setSelectedType(type.id)}
-                className={`p-4 rounded-lg border-2 transition-all ${
-                  selectedType === type.id
-                    ? 'border-red-500 bg-red-500/10'
-                    : 'border-gray-600 hover:border-gray-500'
-                }`}
-              >
-                <type.icon className="w-6 h-6 mx-auto mb-2" />
-                <span className="text-sm">{type.label}</span>
-              </button>
-            ))}
-          </div>
+          <label className="block text-sm font-medium mb-2">Senha</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full p-3 rounded-lg bg-gray-800 border border-gray-600 focus:border-red-500 focus:outline-none"
+            placeholder="••••••••"
+            autoComplete={isSignUp ? 'new-password' : 'current-password'}
+          />
         </div>
 
-        <div className="space-y-4">
+        {isSignUp && (
           <div>
-            <label className="block text-sm font-medium mb-2">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-3 rounded-lg bg-gray-800 border border-gray-600 focus:border-red-500 focus:outline-none"
-              placeholder="seu@email.com"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2">Senha</label>
+            <label className="block text-sm font-medium mb-2">Confirmar senha</label>
             <input
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
               className="w-full p-3 rounded-lg bg-gray-800 border border-gray-600 focus:border-red-500 focus:outline-none"
               placeholder="••••••••"
+              autoComplete="new-password"
             />
           </div>
-        </div>
+        )}
 
         <Button
-          onClick={handleLogin}
+          onClick={handleSubmit}
+          disabled={submitting}
           className="w-full dojo-button text-lg py-4"
         >
-          Entrar no Dojo
+          {submitting ? 'Aguarde...' : isSignUp ? 'Criar conta' : 'Entrar no Dojo'}
         </Button>
-
-        <div className="text-center text-sm text-gray-400">
-          <p>Primeira vez? Use qualquer email e senha para testar</p>
-        </div>
       </motion.div>
     </div>
   );

@@ -2,6 +2,12 @@
 // Estrutura pensada para crescer: no futuro cada um ganha experiências,
 // expertise e histórico próprios.
 //
+// NOTA (Etapa 1 Supabase, 10/2026): a entrada rápida por personagem saiu
+// do Login — agora só autenticação real por e-mail/senha. Estes personagens
+// seguem ATIVOS como amigos fictícios do feed, perfis públicos (/athlete/:id)
+// e demonstração visual, até que friendships reais sejam criadas no banco
+// (próxima etapa). Felipe pode re-expor como "modo demo" se quiser.
+//
 // month: array de 30 booleanos, índice 0 = 30 dias atrás, índice 29 = hoje.
 // milestone: { days, hitAt } marco de sequência mais recente (ISO string).
 //   Marcos válidos: 7, 14, 30, 50, 100, 365.

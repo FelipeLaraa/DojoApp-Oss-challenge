@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 
 const AuthContext = createContext();
 
@@ -12,52 +13,63 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [userType, setUserType] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('dojoUser');
-    const savedUserType = localStorage.getItem('dojoUserType');
-    
-    if (savedUser && savedUserType) {
-      setUser(JSON.parse(savedUser));
-      setUserType(savedUserType);
-    }
-    
-    setLoading(false);
+    // Carrega sessão persistida (se houver) no mount.
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    // Reage a login/logout em qualquer aba.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription?.unsubscribe();
   }, []);
 
-  const login = (userData, type) => {
-    setUser(userData);
-    setUserType(type);
-    localStorage.setItem('dojoUser', JSON.stringify(userData));
-    localStorage.setItem('dojoUserType', type);
+  const signUp = async ({ email, password, name, username }) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { name, username },
+      },
+    });
+    return { data, error };
   };
 
-  const logout = () => {
-    setUser(null);
-    setUserType(null);
-    localStorage.removeItem('dojoUser');
-    localStorage.removeItem('dojoUserType');
+  const signIn = async ({ email, password }) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    return { data, error };
   };
 
-  const updateUser = (updatedFields) => {
-    const newUser = { ...user, ...updatedFields };
-    setUser(newUser);
-    localStorage.setItem('dojoUser', JSON.stringify(newUser));
-    // Memória permanente por perfil: sobrevive a logout e troca de perfil.
-    if (newUser.id) {
-      localStorage.setItem(`dojoProfile_${newUser.id}`, JSON.stringify(newUser));
-    }
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    return { error };
+  };
+
+  // Stub temporário — a tela de Profile ainda chama isso. Até a Etapa 2
+  // (integração da tabela public.profiles), só evita quebrar a UI.
+  const updateUser = (_fields) => {
+    // TODO (etapa 2): escrever em public.profiles e refletir no state.
+    console.warn('updateUser is a stub until profiles table integration is done');
   };
 
   const value = {
     user,
-    userType,
-    login,
-    logout,
+    // Enquanto só existe o perfil aluno, exponho userType fixo pra não quebrar
+    // Profile.jsx e BottomNav.jsx que ainda leem esse valor. Sai na Etapa 2.
+    userType: user ? 'student' : null,
+    loading,
+    signUp,
+    signIn,
+    signOut,
+    // Aliases de compatibilidade com código antigo que chamava logout().
+    logout: signOut,
     updateUser,
-    loading
   };
 
   return (

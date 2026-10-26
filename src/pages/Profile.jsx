@@ -7,6 +7,7 @@ import { toast } from '@/components/ui/use-toast';
 import ShieldProfile from '@/components/ShieldProfile';
 import ProgressBar from '@/components/ProgressBar';
 import { readActivities, computeStreak } from '@/lib/activity';
+import { supabase } from '@/lib/supabase';
 
 // Molduras disponíveis (cor/estilo) com raridade, mostradas em lista compacta.
 const MOLDURAS = [
@@ -71,20 +72,74 @@ const Profile = () => {
     setPhoto(user.photo || null);
   }, [user]);
 
-  const handlePhotoChange = (e) => {
+  // Comprime a imagem no canvas e devolve um Blob JPEG (~100 KB em geral).
+  const compressToBlob = (file, maxSide = 512, quality = 0.85) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('read_error'));
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = () => reject(new Error('decode_error'));
+        img.onload = () => {
+          const ratio = Math.min(1, maxSide / Math.max(img.width, img.height));
+          const w = Math.round(img.width * ratio);
+          const h = Math.round(img.height * ratio);
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          canvas.toBlob(
+            (blob) => (blob ? resolve(blob) : reject(new Error('blob_error'))),
+            'image/jpeg',
+            quality
+          );
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+  const handlePhotoChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) {
       toast({
-        title: "Arquivo inválido",
-        description: "Escolha uma imagem (JPG, PNG, etc.)",
-        variant: "destructive"
+        title: 'Arquivo inválido',
+        description: 'Escolha uma imagem (JPG, PNG, etc.)',
+        variant: 'destructive',
       });
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => setPhoto(reader.result);
-    reader.readAsDataURL(file);
+    if (!user?.id) {
+      toast({
+        title: 'Sessão não encontrada',
+        description: 'Faça login novamente para trocar a foto.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    try {
+      const blob = await compressToBlob(file);
+      const path = `${user.id}/avatar.jpg`;
+      const { error: upErr } = await supabase.storage
+        .from('profile-photos')
+        .upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
+      if (upErr) throw upErr;
+      const { data } = supabase.storage.from('profile-photos').getPublicUrl(path);
+      // Cache-bust: a URL é a mesma a cada upload (upsert), força recarga.
+      const url = `${data.publicUrl}?t=${Date.now()}`;
+      setPhoto(url);
+      await updateUser({ photo: url });
+      toast({ title: 'Foto atualizada!' });
+    } catch (err) {
+      console.warn('photo upload failed:', err);
+      toast({
+        title: 'Falha ao enviar foto',
+        description: err?.message ?? 'Tente novamente em instantes.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const SPORTS = ['BJJ', 'Wrestling', 'Corrida', 'Musculação', 'Boxe', 'Luta livre'];
@@ -118,14 +173,13 @@ const Profile = () => {
     });
   };
 
-  const handleSaveProfile = () => {
+  const handleSaveProfile = async () => {
     const cleanUsername = username.replace(/^@+/, '').trim();
-    updateUser({
+    const { error } = await updateUser({
       name,
       username: cleanUsername,
       bio,
       mainSport,
-      photo,
       frame: selectedFrame,
       emblem: selectedEmblem,
       ...(userType === 'student' && {
@@ -134,9 +188,17 @@ const Profile = () => {
         belt
       })
     });
+    if (error) {
+      toast({
+        title: 'Não foi possível salvar',
+        description: error.message,
+        variant: 'destructive',
+      });
+      return;
+    }
     toast({
-      title: "Perfil atualizado!",
-      description: "Suas alterações foram salvas com sucesso"
+      title: 'Perfil atualizado!',
+      description: 'Suas alterações foram salvas com sucesso'
     });
   };
 

@@ -6,6 +6,8 @@ import ShieldProfile from '@/components/ShieldProfile';
 import WeekStories from '@/components/WeekStories';
 import { characters } from '@/data/characters';
 
+// TODO (Etapa 4): migrar leitura para a tabela public.profiles quando os
+// amigos deixarem de ser fictícios (characters.js) e virarem usuários reais.
 const mergeSaved = (character) => {
   try {
     const saved = localStorage.getItem(`dojoProfile_${character.id}`);

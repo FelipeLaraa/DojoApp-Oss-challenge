@@ -1,5 +1,5 @@
 // DojoApp service worker — minimal cache-first for installable PWA.
-const CACHE_NAME = 'dojo-v1';
+const CACHE_NAME = 'dojo-v2';
 const PRECACHE_URLS = ['/', '/index.html', '/manifest.webmanifest', '/icon.svg', '/apple-touch-icon.svg'];
 
 self.addEventListener('install', (event) => {

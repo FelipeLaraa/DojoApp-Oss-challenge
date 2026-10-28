@@ -1,16 +1,41 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Send, ChevronDown, Users, List, Plus, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Send, ChevronDown, ChevronRight, Users, List, X, Clock } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import ShieldProfile from '@/components/ShieldProfile';
 import FriendsFeed from '@/components/home/FriendsFeed';
 import NotificationBell from '@/components/NotificationBell';
 import { characters } from '@/data/characters';
 
-const QUICK_MESSAGES = ['bora treinar', 'tô contigo', 'cadê você?', 'você consegue', 'vamo!'];
+// Chips contextuais ao estado do amigo. Preenchem o campo de mensagem;
+// o envio é sempre um único botão (sem atalho que dispara direto).
+const QUICK_BY_STATE = {
+  sumido: ['tô sentindo sua falta', 'bora amanhã?', 'te espero no treino'],
+  alta: ['monstro', 'tá voando', 'quero essa energia'],
+  ok: ['bora treinar', 'tô contigo', 'vamo junto']
+};
+
+// Classifica o amigo em "em alta" / "sumido" / "ok" a partir do que o
+// characters.js já carrega (semana + streak + flag inactive).
+const classifyFriend = (f) => {
+  const weekCount = (f.week || []).filter(Boolean).length;
+  if (f.activity?.inactive || (f.streak === 0 && weekCount <= 1)) return 'sumido';
+  if (f.streak >= 7 || weekCount >= 3) return 'alta';
+  return 'ok';
+};
+
+// Quantos dias desde o último treino, lendo o `month` de 30 posições (29 = hoje).
+// Retorna null quando não há dado suficiente, Infinity quando não treinou no mês.
+const daysSinceLastWorkout = (f) => {
+  const month = f.month || [];
+  if (!month.length) return null;
+  for (let i = month.length - 1; i >= 0; i--) {
+    if (month[i]) return month.length - 1 - i;
+  }
+  return Infinity;
+};
 
 // Lê o perfil salvo de um personagem (foto/moldura editadas), se houver.
 const mergeSaved = (character) => {
@@ -34,10 +59,10 @@ const Friends = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [sheetFriend, setSheetFriend] = useState(null);
-  const [customOpen, setCustomOpen] = useState(false);
   const [customMessage, setCustomMessage] = useState('');
   const [view, setView] = useState('feed');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [incentiveTab, setIncentiveTab] = useState('empurrao'); // 'empurrao' | 'alta'
   const menuRef = useRef(null);
 
   useEffect(() => {
@@ -53,9 +78,29 @@ const Friends = () => {
     };
   }, [menuOpen]);
 
-  const friends = characters
-    .filter((c) => c.id !== user?.id)
-    .map(mergeSaved);
+  const friends = useMemo(
+    () => characters.filter((c) => c.id !== user?.id).map(mergeSaved),
+    [user?.id]
+  );
+
+  // Classifica e separa amigos pelas duas pills.
+  const { sumidos, emAlta } = useMemo(() => {
+    const buckets = { sumidos: [], emAlta: [], ok: [] };
+    friends.forEach((f) => {
+      const state = classifyFriend(f);
+      if (state === 'sumido') buckets.sumidos.push({ ...f, _state: state });
+      else if (state === 'alta') buckets.emAlta.push({ ...f, _state: state });
+      else buckets.ok.push({ ...f, _state: state });
+    });
+    // Sumidos: mais tempo sumido primeiro. Em alta: streak maior primeiro.
+    buckets.sumidos.sort((a, b) => daysSinceLastWorkout(b) - daysSinceLastWorkout(a));
+    buckets.emAlta.sort((a, b) => b.streak - a.streak);
+    return buckets;
+  }, [friends]);
+
+  const incentiveList = incentiveTab === 'empurrao' ? sumidos : emAlta;
+
+  const sheetState = sheetFriend ? sheetFriend._state || classifyFriend(sheetFriend) : 'ok';
 
   const sendIncentive = (friend, text) => {
     const trimmed = text.trim();
@@ -71,31 +116,25 @@ const Friends = () => {
     const current = readNotifications(friend.id);
     localStorage.setItem(key, JSON.stringify([notif, ...current]));
     toast({
-      title: `Enviado para ${friend.name}!`,
+      title: `Enviado para ${friend.name}`,
       description: `"${trimmed}"`
     });
   };
 
-  const sendQuick = (friend, message) => {
-    sendIncentive(friend, message);
-    closeSheet();
-  };
-
-  const sendCustom = (friend) => {
-    sendIncentive(friend, customMessage);
-    closeSheet();
-  };
-
   const openSheet = (friend) => {
     setSheetFriend(friend);
-    setCustomOpen(false);
     setCustomMessage('');
   };
 
   const closeSheet = () => {
     setSheetFriend(null);
-    setCustomOpen(false);
     setCustomMessage('');
+  };
+
+  const handleSend = () => {
+    if (!sheetFriend) return;
+    sendIncentive(sheetFriend, customMessage);
+    closeSheet();
   };
 
   const options = [
@@ -175,47 +214,118 @@ const Friends = () => {
                 <FriendsFeed />
 
                 <div>
-                  <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/35 px-2 pb-2.5">
-                    Incentivar amigos
-                  </div>
-                  <div className="rounded-[18px] bg-[#141414] border border-white/10 overflow-hidden">
-                    {friends.map((friend, idx) => {
-                      const inactive = !!friend.activity?.inactive;
-                      const isLast = idx === friends.length - 1;
-                      return (
-                        <div
-                          key={friend.id}
-                          className={`flex items-center gap-3 px-3.5 py-3 ${!isLast ? 'border-b border-white/10' : ''}`}
-                        >
+                  <div className="flex items-center justify-between px-2 pb-2.5">
+                    <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/35">
+                      Incentivar amigos
+                    </div>
+                    <div className="inline-flex items-center gap-1 p-0.5 rounded-full bg-white/5 border border-white/10">
+                      {[
+                        { id: 'empurrao', label: `Empurrão${sumidos.length ? ` · ${sumidos.length}` : ''}`, accent: 'text-amber-300' },
+                        { id: 'alta', label: `Em alta${emAlta.length ? ` · ${emAlta.length}` : ''}`, accent: 'text-emerald-300' }
+                      ].map((t) => {
+                        const active = incentiveTab === t.id;
+                        return (
                           <button
-                            onClick={() => openSheet(friend)}
-                            className="flex items-center gap-3 flex-1 min-w-0 text-left"
+                            key={t.id}
+                            type="button"
+                            onClick={() => setIncentiveTab(t.id)}
+                            className={`px-2.5 py-1 rounded-full text-[10.5px] font-bold tracking-wide transition-colors ${
+                              active
+                                ? `bg-white/10 ${t.accent}`
+                                : 'text-white/45 hover:text-white/70'
+                            }`}
                           >
-                            <ShieldProfile
-                              type={friend.frame}
-                              emblem={friend.emblem}
-                              hit={friend.streak}
-                              size="small"
-                              photo={friend.photo}
-                            />
+                            {t.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="rounded-[18px] bg-[#141414] border border-white/10 overflow-hidden">
+                    {incentiveList.length === 0 ? (
+                      <div className="px-4 py-6 text-center text-[12px] text-white/45 font-medium">
+                        {incentiveTab === 'empurrao'
+                          ? 'ninguém sumido agora · grupo tá treinando'
+                          : 'ninguém em maratona esta semana'}
+                      </div>
+                    ) : (
+                      incentiveList.map((friend, idx) => {
+                        const isLast = idx === incentiveList.length - 1;
+                        const days = daysSinceLastWorkout(friend);
+                        let dotColor = '';
+                        let dotIcon = null;
+                        let subLabel = friend.activity?.headline || friend.modality;
+                        if (friend._state === 'sumido') {
+                          if (days === Infinity || (days != null && days >= 30)) {
+                            dotColor = 'bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.6)]';
+                            dotIcon = <Clock className="w-2.5 h-2.5 text-black" />;
+                            subLabel = days === Infinity ? 'sem treino no mês' : `sumido há ${days}d`;
+                          } else if (days != null && days >= 14) {
+                            dotColor = 'bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.5)]';
+                            subLabel = `sumido há ${days}d`;
+                          } else {
+                            dotColor = 'bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.5)]';
+                            subLabel = days != null ? `sumido há ${days}d` : 'inativo';
+                          }
+                        } else if (friend._state === 'alta') {
+                          dotColor =
+                            friend.streak >= 14
+                              ? 'bg-[#d4af37] shadow-[0_0_6px_rgba(212,175,55,0.6)]'
+                              : 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.5)]';
+                          subLabel =
+                            friend.streak >= 7
+                              ? `${friend.streak} dias de hit`
+                              : `${(friend.week || []).filter(Boolean).length}/7 na semana`;
+                        }
+                        return (
+                          <button
+                            key={friend.id}
+                            type="button"
+                            onClick={() => openSheet(friend)}
+                            className={`w-full flex items-center gap-3 px-3.5 py-3 text-left hover:bg-white/[0.03] transition-colors ${
+                              !isLast ? 'border-b border-white/10' : ''
+                            }`}
+                          >
+                            <div className="relative flex-shrink-0">
+                              <ShieldProfile
+                                type={friend.frame}
+                                emblem={friend.emblem}
+                                hit={friend.streak}
+                                size="small"
+                                photo={friend.photo}
+                              />
+                              <span
+                                className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full ring-2 ring-[#141414] flex items-center justify-center ${dotColor}`}
+                              >
+                                {dotIcon}
+                              </span>
+                            </div>
                             <div className="flex-1 min-w-0">
                               <div className="text-[13px] font-bold tracking-tight text-white truncate">
                                 {friend.name}
                               </div>
-                              <div className={`text-xs truncate ${inactive ? 'text-white/40' : 'text-white/55'}`}>
-                                {friend.activity?.headline || friend.modality}
+                              <div
+                                className={`text-[11.5px] font-medium truncate ${
+                                  friend._state === 'sumido'
+                                    ? days != null && days >= 14
+                                      ? 'text-rose-300/80'
+                                      : 'text-amber-200/80'
+                                    : friend._state === 'alta'
+                                    ? friend.streak >= 14
+                                      ? 'text-[#d4af37]/90'
+                                      : 'text-emerald-300/80'
+                                    : 'text-white/55'
+                                }`}
+                              >
+                                {subLabel}
                               </div>
                             </div>
+                            <ChevronRight className="w-4 h-4 text-white/25 flex-shrink-0" />
                           </button>
-                          <button
-                            onClick={() => openSheet(friend)}
-                            className="shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider border border-[#ff6b4a]/40 bg-[#ff6b4a]/10 text-[#ff8e75] hover:bg-[#ff6b4a]/20 transition-colors"
-                          >
-                            Incentivar
-                          </button>
-                        </div>
-                      );
-                    })}
+                        );
+                      })
+                    )}
                   </div>
                 </div>
               </>
@@ -290,48 +400,51 @@ const Friends = () => {
                 </button>
               </div>
 
-              <div className="mt-5 flex flex-wrap gap-2">
-                {QUICK_MESSAGES.map((m) => (
-                  <button
-                    key={m}
-                    onClick={() => sendQuick(sheetFriend, m)}
-                    className="px-3.5 py-2 rounded-full text-xs font-semibold border border-white/15 bg-white/5 text-gray-200 hover:border-[#ff6b4a] hover:text-[#ff8e75] transition-colors"
-                  >
-                    {m}
-                  </button>
-                ))}
+              <div className="mt-5 space-y-3">
+                <textarea
+                  value={customMessage}
+                  onChange={(e) => setCustomMessage(e.target.value)}
+                  placeholder={
+                    sheetState === 'sumido'
+                      ? 'Puxa ele pro treino...'
+                      : sheetState === 'alta'
+                      ? 'Celebra a maratona...'
+                      : 'Escreva uma mensagem...'
+                  }
+                  rows={3}
+                  maxLength={240}
+                  autoFocus
+                  className="w-full p-3 rounded-lg bg-black/40 border border-white/10 focus:border-[#ff6b4a] focus:outline-none text-sm resize-none"
+                />
+
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-white/40 font-bold mb-2">
+                    sugestões
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {QUICK_BY_STATE[sheetState].map((m) => (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => setCustomMessage(m)}
+                        className="px-3.5 py-1.5 rounded-full text-xs font-semibold border border-white/15 bg-white/5 text-gray-200 hover:border-[#ff6b4a] hover:text-[#ff8e75] transition-colors"
+                      >
+                        {m}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <button
-                  onClick={() => setCustomOpen((v) => !v)}
-                  className={`px-3.5 py-2 rounded-full text-xs font-semibold border flex items-center gap-1 transition-colors ${
-                    customOpen
-                      ? 'border-[#ff6b4a] bg-[#ff6b4a]/10 text-[#ff8e75]'
-                      : 'border-white/15 bg-white/5 text-gray-200 hover:border-[#ff6b4a] hover:text-[#ff8e75]'
-                  }`}
+                  type="button"
+                  onClick={handleSend}
+                  disabled={!customMessage.trim()}
+                  className="w-full py-3 rounded-xl font-extrabold flex items-center justify-center gap-2 transition-opacity bg-gradient-to-br from-[#ff6b4a] to-[#ff4d2e] text-white shadow-[0_10px_24px_rgba(255,77,46,0.4)] disabled:opacity-40 disabled:shadow-none"
                 >
-                  <Plus className="w-3 h-3" />
-                  mensagem
+                  <Send className="w-4 h-4" />
+                  Enviar para {sheetFriend.name}
                 </button>
               </div>
-
-              {customOpen && (
-                <div className="mt-4 space-y-2">
-                  <textarea
-                    value={customMessage}
-                    onChange={(e) => setCustomMessage(e.target.value)}
-                    placeholder="Escreva uma mensagem..."
-                    rows={3}
-                    autoFocus
-                    className="w-full p-3 rounded-lg bg-black/40 border border-white/10 focus:border-[#ff6b4a] focus:outline-none text-sm resize-none"
-                  />
-                  <Button
-                    onClick={() => sendCustom(sheetFriend)}
-                    className="w-full dojo-button flex items-center justify-center gap-2"
-                  >
-                    <Send className="w-4 h-4" />
-                    Enviar para {sheetFriend.name}
-                  </Button>
-                </div>
-              )}
             </motion.div>
           </>
         )}

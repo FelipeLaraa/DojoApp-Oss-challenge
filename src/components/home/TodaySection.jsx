@@ -28,7 +28,9 @@ const TodaySection = () => {
   const totalMin = todays.reduce((acc, a) => acc + (Number(a.durationMin) || 0), 0);
   const multiSession = todays.length > 1;
 
-  const handleRegister = () => navigate('/register');
+  // Primeiro treino do dia abre direto a câmera; sessão extra vai pro form normal.
+  const handleRegister = () =>
+    navigate(trained ? '/register' : '/register?camera=1');
 
   // "Último" (antes do treino) vs "Hoje" (depois do treino).
   let lastLabel = 'Último';

@@ -46,6 +46,7 @@ export const addActivity = (
   {
     sport,
     durationMin,
+    distanceKm,
     note,
     photo,
     local,
@@ -64,10 +65,16 @@ export const addActivity = (
     const n = Number(v);
     return Number.isFinite(n) ? n : null;
   };
+  const toFloat = (v) => {
+    if (v === undefined || v === null || v === '') return null;
+    const n = Number(String(v).replace(',', '.'));
+    return Number.isFinite(n) && n > 0 ? n : null;
+  };
   const entry = {
     date: new Date().toISOString(),
     sport: sport || null,
     durationMin: durationMin ? Number(durationMin) : null,
+    distanceKm: toFloat(distanceKm),
     note: note ? String(note).slice(0, 240) : null,
     photo: photo || null,
     local: local ? String(local).slice(0, 80) : null,

@@ -1,6 +1,6 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   Flame,
@@ -53,6 +53,9 @@ const compressImage = (file) =>
 
 const SPORTS = ['BJJ', 'Wrestling', 'Corrida', 'Musculação', 'Boxe', 'Luta livre', 'Natação'];
 
+// Modalidades em que faz sentido oferecer o campo de distância (km).
+const DISTANCE_SPORTS = new Set(['Corrida', 'Natação', 'Musculação']);
+
 const MOODS = [
   { key: 'exausto', emoji: '😮‍💨', label: 'exausto' },
   { key: 'sofreu', emoji: '😤', label: 'sofreu' },
@@ -70,6 +73,8 @@ const nextMilestone = (streak) => {
 const RegisterActivity = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const cameraMode = searchParams.get('camera') === '1';
 
   const existing = readActivities(user?.id);
   const streak = useMemo(() => computeStreak(existing), [existing]);
@@ -85,10 +90,15 @@ const RegisterActivity = () => {
 
   const [sport, setSport] = useState(user?.mainSport || 'BJJ');
   const [duration, setDuration] = useState(60);
+  const [distanceKm, setDistanceKm] = useState('');
   const [comment, setComment] = useState('');
   const [mood, setMood] = useState(null);
   const [photo, setPhoto] = useState(null);
   const fileInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
+  const cameraTriggered = useRef(false);
+
+  const showsDistance = DISTANCE_SPORTS.has(sport);
 
   const handleRegister = () => {
     if (storageUsageRatio() >= 0.9) {
@@ -100,6 +110,7 @@ const RegisterActivity = () => {
     const updated = addActivity(user?.id, {
       sport,
       durationMin: duration,
+      distanceKm: showsDistance ? distanceKm : null,
       comment,
       mood,
       photo
@@ -146,6 +157,16 @@ const RegisterActivity = () => {
 
   const handleRemovePhoto = () => setPhoto(null);
 
+  // Vindo da Home com ?camera=1: dispara o seletor de câmera uma única vez.
+  useEffect(() => {
+    if (!cameraMode || cameraTriggered.current) return;
+    cameraTriggered.current = true;
+    const t = setTimeout(() => cameraInputRef.current?.click(), 150);
+    return () => clearTimeout(t);
+  }, [cameraMode]);
+
+  const handleCloseCamera = () => navigate('/student');
+
   const now = new Date();
   const dateLabel = now.toLocaleDateString('pt-BR', {
     weekday: 'short',
@@ -175,18 +196,28 @@ const RegisterActivity = () => {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        {/* Header: back + date pill */}
+        {/* Header: back/close + date pill */}
         <div className="flex items-center justify-between px-5 pt-5 pb-4">
           <button
-            onClick={() => navigate(-1)}
+            onClick={cameraMode ? handleCloseCamera : () => navigate(-1)}
             className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white"
-            aria-label="Voltar"
+            aria-label={cameraMode ? 'Fechar' : 'Voltar'}
           >
-            <ArrowLeft className="w-4 h-4" />
+            {cameraMode ? <X className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
           </button>
           <span className="date-pill">{dateLabel} · {timeLabel}</span>
           <div className="w-9" />
         </div>
+
+        {/* Input invisível: câmera direta (?camera=1 vem da Home) */}
+        <input
+          ref={cameraInputRef}
+          type="file"
+          accept="image/jpeg,image/png"
+          capture="environment"
+          onChange={handlePhotoChange}
+          className="hidden"
+        />
 
         {/* HERO card (Nicole) */}
         <div className="px-5">
@@ -343,6 +374,31 @@ const RegisterActivity = () => {
               </button>
             </div>
           </div>
+
+          {/* Distância (só pra Corrida/Natação/Musculação) */}
+          {showsDistance && (
+            <div className="card-tight p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-[10px] uppercase tracking-wider text-neutral-500">
+                  Distância
+                </div>
+                <div className="text-[10px] text-neutral-500">opcional</div>
+              </div>
+              <div className="flex items-baseline gap-1 justify-center">
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  step="0.1"
+                  min="0"
+                  value={distanceKm}
+                  onChange={(e) => setDistanceKm(e.target.value)}
+                  placeholder="0"
+                  className="w-24 bg-transparent text-4xl font-bold outline-none text-white text-center placeholder:text-neutral-700"
+                />
+                <span className="text-xs text-neutral-500">km</span>
+              </div>
+            </div>
+          )}
 
           {/* Mood */}
           <div>

@@ -17,3 +17,7 @@ npm-debug.log*
 # Sistema
 .DS_Store
 *.local
+
+# Claude Code (configs locais do usuário)
+.claude/settings.json
+.claude/settings.local.json

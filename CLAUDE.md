@@ -17,6 +17,15 @@ entre amigos (accountability do grupo). O valor é cobrança e apoio, não vaida
 Futuro possível: juntar o lado social (amigo-pra-amigo) com check-in em academias
 (estilo Wellhub). O foco ATUAL é o B2C social.
 
+## Design do DojoApp (contexto pra Nicole)
+
+A Nicole (plugin) traz o julgamento geral. Aqui fica só o específico do Dojo:
+
+- **Toda entrada entrega recompensa visual.** Ansiedade boa de registrar o próximo treino — micro-animação, selo, moldura mudando de cor, sequência subindo. Registro sem recompensa visual é tela não terminada.
+- **Peso das referências:** Strava (a mais pesada, uso diário) > Gym Rats (competitivo, hierarquia simples) > Instagram (SIM pra formato de UI familiar; NÃO pro tom) > Duolingo (baixo, só no motor de hábito).
+- **Teste de cheiro antes de desenhar:** "isso serve pro cara provar o hábito dele ou pro cara aparecer?". Se é aparecer, corta.
+- **Reações são incentivo, não métrica:** Fogo / Força / Cutucar entre amigos próximos — nunca curtida-vaidade.
+
 ## Estado real do código
 
 Base gerada por vibe coding (Hostinger Horizons), reconstruída peça a peça.

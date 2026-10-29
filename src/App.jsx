@@ -13,6 +13,7 @@ import RegisterActivity from '@/pages/RegisterActivity';
 import Ranking from '@/pages/Ranking';
 import Friends from '@/pages/Friends';
 import AthleteProfile from '@/pages/AthleteProfile';
+import MonthHistory from '@/pages/MonthHistory';
 import BottomNav from '@/components/BottomNav';
 
 // Guarda rotas que exigem usuário logado.
@@ -45,6 +46,7 @@ function AppRoutes() {
       <Route path="/ranking" element={<RequireAuth><Ranking /></RequireAuth>} />
       <Route path="/friends" element={<RequireAuth><Friends /></RequireAuth>} />
       <Route path="/athlete/:id" element={<RequireAuth><AthleteProfile /></RequireAuth>} />
+      <Route path="/history/:yyyyMM" element={<RequireAuth><MonthHistory /></RequireAuth>} />
     </Routes>
   );
 }

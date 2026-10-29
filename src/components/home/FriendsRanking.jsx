@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ChevronRight } from 'lucide-react';
 
 // Conta treinos da última semana (índices 23..29 do array month[30]).
 const weekCount = (month = []) => {
@@ -41,12 +42,19 @@ const FriendsRanking = ({ friends = [] }) => {
 
   return (
     <div>
-      <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/35 px-2 pb-2.5 flex items-center gap-2">
-        Ranking da semana
-        <span className="ml-auto text-[10px] text-white/55 normal-case tracking-normal font-semibold">
-          · mês até hoje
+      <button
+        type="button"
+        onClick={() => navigate('/ranking')}
+        className="w-full px-2 pb-2.5 flex items-center justify-between text-left group"
+      >
+        <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/35 group-hover:text-white/55 transition-colors">
+          Top do mês
         </span>
-      </div>
+        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-white/55 group-hover:text-white transition-colors">
+          Ver tudo
+          <ChevronRight className="w-3.5 h-3.5" />
+        </span>
+      </button>
       <div className="rounded-[18px] bg-[#141414] border border-white/10 overflow-hidden">
         {sorted.map((f, pos) => {
           const color = colorFor(f, pos);

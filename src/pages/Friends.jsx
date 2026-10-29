@@ -367,14 +367,14 @@ const Friends = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={closeSheet}
-              className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40"
+              className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[65]"
             />
             <motion.div
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 32, stiffness: 320 }}
-              className="fixed inset-x-0 bottom-0 z-50 rounded-t-[22px] bg-[#141414] border-t border-[#ff6b4a]/30 p-5 pb-8 max-h-[88vh] overflow-y-auto"
+              className="fixed inset-x-0 bottom-0 z-[70] rounded-t-[22px] bg-[#141414] border-t border-[#ff6b4a]/30 px-5 pt-5 pb-[calc(96px+env(safe-area-inset-bottom,0px))] max-h-[80vh] overflow-y-auto"
             >
               <div className="flex items-start gap-3">
                 <ShieldProfile

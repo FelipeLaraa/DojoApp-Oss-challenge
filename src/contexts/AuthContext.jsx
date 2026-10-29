@@ -29,6 +29,7 @@ const normalizeProfile = (row) =>
         emblem: row.emblem,
         photo: row.photo_url,
         roleLabel: row.role_label,
+        nextWorkout: row.next_workout,
       }
     : null;
 
@@ -37,6 +38,7 @@ const CAMEL_TO_SNAKE = {
   mainSport: 'main_sport',
   photo: 'photo_url',
   roleLabel: 'role_label',
+  nextWorkout: 'next_workout',
 };
 
 const toSnakePayload = (fields) => {

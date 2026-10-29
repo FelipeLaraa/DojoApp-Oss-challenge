@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -11,7 +11,9 @@ import {
   Lock,
   Check,
   Plus,
-  Minus
+  Minus,
+  Clock,
+  Route
 } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import {
@@ -100,7 +102,14 @@ const RegisterActivity = () => {
   const showsDistance = DISTANCE_SPORTS.has(sport);
 
   const [saving, setSaving] = useState(false);
-  const handleRegister = async () => {
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const openConfirm = () => {
+    if (saving) return;
+    setConfirmOpen(true);
+  };
+
+  const confirmSave = async () => {
     if (saving) return;
     setSaving(true);
     const entry = await addActivity(user?.id, {
@@ -113,6 +122,7 @@ const RegisterActivity = () => {
     });
     if (!entry) {
       setSaving(false);
+      setConfirmOpen(false);
       toast({
         title: 'Não foi possível registrar',
         description: 'Verifique sua conexão e tente de novo.',
@@ -123,12 +133,16 @@ const RegisterActivity = () => {
     await refreshActivities();
     // Streak otimista: adiciona a nova entry à lista local pra calcular.
     const projectedStreak = computeStreak([entry, ...existing]);
+    setConfirmOpen(false);
     toast({
       title: 'Treino registrado! 🔥',
       description: `Sua sequência está em ${projectedStreak} ${projectedStreak === 1 ? 'dia' : 'dias'}.`
     });
     navigate('/student');
   };
+
+  const moodLabel = mood ? MOODS.find((m) => m.key === mood) : null;
+  const parsedDistance = showsDistance && distanceKm ? Number(String(distanceKm).replace(',', '.')) : null;
 
   const handlePhotoChange = async (e) => {
     const file = e.target.files && e.target.files[0];
@@ -538,7 +552,7 @@ const RegisterActivity = () => {
 
       {/* Save bar sticky bottom */}
       <div className="save-bar">
-        <button type="button" onClick={handleRegister} className="save-btn">
+        <button type="button" onClick={openConfirm} className="save-btn">
           <Flame className="w-5 h-5" fill="currentColor" />
           {doneToday
             ? `Registrar outra sessão · dia ${targetDay}`
@@ -548,6 +562,139 @@ const RegisterActivity = () => {
           basta a modalidade · o resto é bônus
         </div>
       </div>
+
+      {/* Modal de confirmação — Felipe quer finalização explícita.
+          Mostra resumo do que vai pro banco; dá chance de voltar e ajustar. */}
+      <AnimatePresence>
+        {confirmOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 z-[80] flex items-end justify-center bg-black/70 backdrop-blur-sm"
+            onClick={() => !saving && setConfirmOpen(false)}
+          >
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 32, stiffness: 320 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md bg-[#141414] border-t border-[#ff6b4a]/30 rounded-t-3xl p-5 pb-[calc(20px+env(safe-area-inset-bottom,0px))] space-y-4"
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="text-[10px] uppercase tracking-[0.14em] font-bold text-[#ff6b4a]">
+                    confirmar
+                  </div>
+                  <h3 className="text-xl font-extrabold tracking-tight mt-0.5">
+                    Registrar este treino?
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => !saving && setConfirmOpen(false)}
+                  disabled={saving}
+                  aria-label="Fechar"
+                  className="p-1.5 rounded-full hover:bg-white/5 text-white/60 hover:text-white transition-colors disabled:opacity-30"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Resumo visual: modalidade + chips de duração/distância/mood */}
+              <div className="rounded-2xl bg-black/40 border border-white/10 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] uppercase tracking-wider text-neutral-500 font-semibold">
+                    Modalidade
+                  </span>
+                  <span className="text-sm font-bold text-white">{sport}</span>
+                </div>
+
+                <div className="h-px bg-white/5" />
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+                      <Clock className="w-3.5 h-3.5 text-[#ff6b4a]" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-[9px] uppercase tracking-wider text-neutral-500 font-semibold">
+                        Duração
+                      </div>
+                      <div className="text-sm font-bold text-white truncate">
+                        {Number(duration) || 0} min
+                      </div>
+                    </div>
+                  </div>
+
+                  {showsDistance && parsedDistance != null && parsedDistance > 0 && (
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+                        <Route className="w-3.5 h-3.5 text-[#d4af37]" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-[9px] uppercase tracking-wider text-neutral-500 font-semibold">
+                          Distância
+                        </div>
+                        <div className="text-sm font-bold text-white truncate">
+                          {parsedDistance} km
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {(moodLabel || comment || photo) && (
+                  <>
+                    <div className="h-px bg-white/5" />
+                    <div className="flex flex-wrap gap-2">
+                      {moodLabel && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-[11px] font-semibold text-white/80">
+                          <span className="text-sm leading-none">{moodLabel.emoji}</span>
+                          {moodLabel.label}
+                        </span>
+                      )}
+                      {photo && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-[11px] font-semibold text-white/80">
+                          <Camera className="w-3 h-3" />
+                          foto
+                        </span>
+                      )}
+                      {comment && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-[11px] font-semibold text-white/80 max-w-full truncate">
+                          "{comment.length > 40 ? comment.slice(0, 40) + '…' : comment}"
+                        </span>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="flex gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setConfirmOpen(false)}
+                  disabled={saving}
+                  className="flex-1 py-3.5 rounded-xl font-bold text-sm bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 disabled:opacity-40 transition-colors"
+                >
+                  Voltar
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmSave}
+                  disabled={saving}
+                  className="flex-[2] py-3.5 rounded-xl font-extrabold text-white bg-gradient-to-br from-[#ff6b4a] to-[#ff4d2e] shadow-[0_10px_24px_rgba(255,77,46,0.4)] disabled:opacity-60 flex items-center justify-center gap-2"
+                >
+                  <Flame className="w-4 h-4" fill="currentColor" />
+                  {saving ? 'Salvando...' : 'Confirmar e salvar'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -4,6 +4,7 @@ import { Flame, Check } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import ShieldProfile from '@/components/ShieldProfile';
 import WeekStories from '@/components/WeekStories';
+import NextWorkoutChip from '@/components/home/NextWorkoutChip';
 import {
   readActivities,
   computeStreak,
@@ -47,7 +48,12 @@ const TodaySection = () => {
 
   return (
     <section className="flex flex-col items-center">
-      {/* Stories semanais no topo (padrão Instagram) */}
+      {/* Chip discreto: próximo treino (ou CTA pra marcar) */}
+      <div className="w-full mb-3">
+        <NextWorkoutChip />
+      </div>
+
+      {/* Stories semanais (padrão Instagram) */}
       <div className="w-full">
         <WeekStories activities={myActivities} user={user} trainedToday={trained} />
       </div>

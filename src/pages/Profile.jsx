@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/components/ui/use-toast';
 import ShieldProfile from '@/components/ShieldProfile';
 import WeekStories from '@/components/WeekStories';
+import YearHeatmap from '@/components/YearHeatmap';
 import { readActivities, computeStreak, weekTrained, trainedToday as didTrainToday } from '@/lib/activity';
 import { supabase } from '@/lib/supabase';
 
@@ -250,6 +251,11 @@ const Profile = () => {
             </div>
             <div className="text-[11px] text-white/55 mt-0.5 font-medium">treinos</div>
           </div>
+        </div>
+
+        {/* Heatmap anual — prova pública do hábito */}
+        <div className="px-5 pt-4">
+          <YearHeatmap activities={activities} />
         </div>
 
         {/* PRO teaser */}

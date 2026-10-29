@@ -2,7 +2,7 @@ import React from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
-import { Home, Calendar, Flame, Trophy, User, Users } from 'lucide-react';
+import { Home, Flame, Trophy, User, Users } from 'lucide-react';
 
 const BottomNav = () => {
   const location = useLocation();
@@ -22,7 +22,6 @@ const BottomNav = () => {
 
   const navItems = [
     { path: getHomeRoute(), icon: Home, label: 'Home' },
-    { path: '/schedule', icon: Calendar, label: 'Agenda' },
     { path: '/register', icon: Flame, label: 'Treinar' },
     { path: '/ranking', icon: Trophy, label: 'Ranking' },
     { path: '/friends', icon: Users, label: 'Amigos' },

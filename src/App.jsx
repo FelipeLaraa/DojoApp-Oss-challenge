@@ -7,7 +7,6 @@ import Login from '@/pages/Login';
 import StudentHome from '@/pages/StudentHome';
 import TeacherHome from '@/pages/TeacherHome';
 import AcademyHome from '@/pages/AcademyHome';
-import Schedule from '@/pages/Schedule';
 import TeacherChecklist from '@/pages/TeacherChecklist';
 import Profile from '@/pages/Profile';
 import RegisterActivity from '@/pages/RegisterActivity';
@@ -40,7 +39,6 @@ function AppRoutes() {
       <Route path="/student" element={<RequireAuth><StudentHome /></RequireAuth>} />
       <Route path="/teacher" element={<RequireAuth><TeacherHome /></RequireAuth>} />
       <Route path="/academy" element={<RequireAuth><AcademyHome /></RequireAuth>} />
-      <Route path="/schedule" element={<RequireAuth><Schedule /></RequireAuth>} />
       <Route path="/teacher-checklist/:classId" element={<RequireAuth><TeacherChecklist /></RequireAuth>} />
       <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
       <Route path="/register" element={<RequireAuth><RegisterActivity /></RequireAuth>} />

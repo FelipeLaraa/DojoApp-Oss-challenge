@@ -8,7 +8,6 @@ import NextWorkoutChip from '@/components/home/NextWorkoutChip';
 import {
   readActivities,
   computeStreak,
-  weekTrained,
   trainedToday as didTrainToday,
   todaySessions
 } from '@/lib/activity';
@@ -22,7 +21,6 @@ const TodaySection = () => {
 
   const myActivities = readActivities(user?.id);
   const streak = computeStreak(myActivities);
-  const weekCount = weekTrained(myActivities).filter(Boolean).length;
   const trained = didTrainToday(myActivities);
   const latest = myActivities[0];
   const todays = todaySessions(myActivities);
@@ -48,18 +46,13 @@ const TodaySection = () => {
 
   return (
     <section className="flex flex-col items-center">
-      {/* Chip discreto: próximo treino (ou CTA pra marcar) */}
-      <div className="w-full mb-3">
-        <NextWorkoutChip />
-      </div>
-
       {/* Stories semanais (padrão Instagram) */}
       <div className="w-full">
         <WeekStories activities={myActivities} user={user} trainedToday={trained} />
       </div>
 
       {/* Hero: escudo grande */}
-      <div className="pt-4 pb-2">
+      <div className="pt-3 pb-1">
         <ShieldProfile
           type={user?.frame || 'black'}
           emblem={user?.emblem}
@@ -71,25 +64,14 @@ const TodaySection = () => {
         />
       </div>
 
-      <h2 className="mt-5 text-2xl font-extrabold tracking-tight">{user?.name}</h2>
-      <p className="mt-1 text-sm text-gray-400">{subtitle}</p>
-
-      {/* Chip "sua vez" — só aparece se ainda não treinou hoje */}
-      {!trained && (
-        <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#ff6b4a]/10 text-[#ff6b4a] text-xs font-bold tracking-wide">
-          <span className="relative flex w-1.5 h-1.5">
-            <span className="absolute inline-flex w-full h-full rounded-full bg-[#ff6b4a] opacity-75 animate-ping" />
-            <span className="relative inline-flex w-1.5 h-1.5 rounded-full bg-[#ff6b4a]" />
-          </span>
-          Sua vez hoje — não perca a sequência
-        </div>
-      )}
+      <h2 className="mt-4 text-2xl font-extrabold tracking-tight">{user?.name}</h2>
+      <p className="mt-0.5 text-sm text-gray-400">{subtitle}</p>
 
       {/* CTA gigante */}
-      <div className="w-full px-1 mt-5">
+      <div className="w-full px-1 mt-4">
         <button
           onClick={handleRegister}
-          className={`w-full rounded-2xl py-5 px-5 font-extrabold text-lg flex items-center justify-center gap-2 tracking-tight transition-transform active:scale-[.98] ${
+          className={`w-full rounded-2xl py-4 px-5 font-extrabold text-lg flex items-center justify-center gap-2 tracking-tight transition-transform active:scale-[.98] ${
             trained
               ? 'bg-white/5 border border-white/10 text-gray-400 shadow-none'
               : 'bg-gradient-to-br from-[#ff6b4a] to-[#ff4d2e] shadow-[0_14px_30px_rgba(255,77,46,0.4)] text-white'
@@ -116,8 +98,16 @@ const TodaySection = () => {
         </button>
       </div>
 
-      {/* Resumo 3 colunas */}
-      <div className="w-full mt-5 dojo-card px-5 py-4 flex items-center justify-between gap-3">
+      {/* Chip "próximo treino" promovido logo abaixo do CTA quando já treinou:
+          nesse estado a pergunta mental vira "quando é o próximo?" */}
+      {trained && (
+        <div className="w-full mt-3">
+          <NextWorkoutChip />
+        </div>
+      )}
+
+      {/* Resumo 2 colunas (WeekStories já comunica semana) */}
+      <div className="w-full mt-3 dojo-card px-5 py-3 flex items-center justify-between gap-4">
         <div className="flex-1">
           <div className="text-[11px] uppercase tracking-widest text-gray-400 font-semibold">
             Sequência
@@ -133,18 +123,18 @@ const TodaySection = () => {
         <div className="w-px h-9 bg-white/10" />
         <div className="flex-1">
           <div className="text-[11px] uppercase tracking-widest text-gray-400 font-semibold">
-            Semana
-          </div>
-          <div className="mt-0.5 text-lg font-extrabold tracking-tight">{weekCount} / 7</div>
-        </div>
-        <div className="w-px h-9 bg-white/10" />
-        <div className="flex-1">
-          <div className="text-[11px] uppercase tracking-widest text-gray-400 font-semibold">
             {lastLabel}
           </div>
           <div className="mt-0.5 text-lg font-extrabold tracking-tight">{lastValue}</div>
         </div>
       </div>
+
+      {/* Antes de treinar: chip "próximo treino" fica no fim, lembrete leve */}
+      {!trained && (
+        <div className="w-full mt-3">
+          <NextWorkoutChip />
+        </div>
+      )}
 
     </section>
   );

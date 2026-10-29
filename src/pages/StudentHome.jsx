@@ -42,11 +42,11 @@ const StudentHome = () => {
   };
 
   return (
-    <div className="min-h-screen pb-28 p-6 dojo-gradient">
+    <div className="min-h-screen pb-28 px-5 pt-4 dojo-gradient">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="space-y-6"
+        className="space-y-4"
       >
         <NotificationBell userId={user?.id}>
           <div ref={menuRef} className="relative">
@@ -93,9 +93,7 @@ const StudentHome = () => {
           </div>
         </NotificationBell>
 
-        <div className="space-y-6">
-          <TodaySection />
-        </div>
+        <TodaySection />
       </motion.div>
     </div>
   );

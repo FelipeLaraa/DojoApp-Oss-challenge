@@ -129,7 +129,11 @@ const FriendsStories = ({ friends = [] }) => {
     setViewed(readViewed(user?.id));
   }, [user?.id]);
 
-  if (!friends.length) return null;
+  // Regra Felipe: sem story (foto do último treino), não entra no carrossel.
+  // Quem treinou hoje tem lastPhoto; quem sumiu, não. Carrossel vira sinal real.
+  const withStory = friends.filter((f) => f.lastPhoto?.url);
+
+  if (!withStory.length) return null;
 
   const isViewed = (f) => {
     const seen = viewed[f.id];
@@ -138,10 +142,6 @@ const FriendsStories = ({ friends = [] }) => {
   };
 
   const openStory = (f) => {
-    if (!f.lastPhoto) {
-      navigate(`/athlete/${f.id}`);
-      return;
-    }
     const next = { ...viewed, [f.id]: f.lastPhoto.postedAt };
     setViewed(next);
     writeViewed(user?.id, next);
@@ -151,7 +151,7 @@ const FriendsStories = ({ friends = [] }) => {
   return (
     <>
       <div className="flex gap-3.5 overflow-x-auto py-1 px-1" style={{ scrollbarWidth: 'none' }}>
-        {friends.map((f) => {
+        {withStory.map((f) => {
           const state = stateOf(f);
           const viewedNow = isViewed(f);
           return (

@@ -1,7 +1,15 @@
-// Registro de treinos por perfil, em localStorage (provisório até o backend).
-// Chave: dojoActivities_<userId> → array de { date, sport, durationMin, note }.
+// Registro de treinos — agora persistido no Supabase (tabela `activities`).
+// Fotos vão pro bucket `training-photos` em <user_id>/<timestamp>.jpg.
+//
+// Shape mantido retrocompatível com o modelo antigo em localStorage:
+//   { date, sport, durationMin, distanceKm, comment, mood, photo }
+// mapeado a partir das colunas snake_case (created_at, duration_min, etc).
+//
+// readActivities e addActivity agora são async. Os helpers puros (dayKey,
+// computeStreak, weekTrained, todaySessions, trainedToday) continuam
+// síncronos — operam sobre o array já carregado.
 
-const keyFor = (userId) => `dojoActivities_${userId}`;
+import { supabase } from '@/lib/supabase';
 
 // Chave de dia no fuso local (YYYY-MM-DD), para a sequência casar com o "hoje"
 // que o usuário enxerga no aparelho.
@@ -13,53 +21,85 @@ export const dayKey = (date) => {
   return `${y}-${m}-${day}`;
 };
 
-export const readActivities = (userId) => {
+// Mapeia uma linha do Supabase pro shape que o resto do app consome.
+const mapRow = (row) => ({
+  id: row.id,
+  date: row.created_at,
+  sport: row.sport,
+  durationMin: row.duration_min != null ? Number(row.duration_min) : null,
+  distanceKm: row.distance_km != null ? Number(row.distance_km) : null,
+  comment: row.comment,
+  mood: row.mood,
+  photo: row.photo_url
+});
+
+// Lê os treinos do user, mais recente primeiro. Retorna [] em qualquer erro.
+export const readActivities = async (userId) => {
   if (!userId) return [];
   try {
-    return JSON.parse(localStorage.getItem(keyFor(userId)) || '[]');
-  } catch {
+    const { data, error } = await supabase
+      .from('activities')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+    if (error) {
+      console.warn('readActivities error:', error.message);
+      return [];
+    }
+    return (data || []).map(mapRow);
+  } catch (err) {
+    console.warn('readActivities exception:', err);
     return [];
   }
 };
 
-// Fração aproximada de uso do localStorage (0..1+). O limite típico de um
-// navegador é ~5 MB por origem; usamos isso como base de referência.
-export const storageUsageRatio = () => {
+// Fração aproximada de uso do localStorage. Mantido como stub (sempre 0)
+// pra código legado que ainda chama — agora o storage é remoto, limite irrelevante.
+export const storageUsageRatio = () => 0;
+
+// Converte um dataURL ("data:image/jpeg;base64,...") em Blob pra upload.
+const dataUrlToBlob = async (dataUrl) => {
+  const res = await fetch(dataUrl);
+  return await res.blob();
+};
+
+// Faz upload da foto de treino, retorna a URL pública (ou null em erro).
+// Caminho: <user_id>/<timestamp>-<rand>.jpg (RLS exige folder = auth.uid()).
+const uploadTrainingPhoto = async (userId, photo) => {
+  if (!photo) return null;
+  // Se já é uma URL http(s), passa direto — nada a fazer.
+  if (typeof photo === 'string' && /^https?:/i.test(photo)) return photo;
+  if (typeof photo !== 'string' || !photo.startsWith('data:')) return null;
+
   try {
-    let total = 0;
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      const v = localStorage.getItem(k) || '';
-      total += k.length + v.length;
+    const blob = await dataUrlToBlob(photo);
+    const rand = Math.random().toString(36).slice(2, 8);
+    const path = `${userId}/${Date.now()}-${rand}.jpg`;
+    const { error: upErr } = await supabase.storage
+      .from('training-photos')
+      .upload(path, blob, { upsert: false, contentType: 'image/jpeg' });
+    if (upErr) {
+      console.warn('training photo upload failed:', upErr.message);
+      return null;
     }
-    return total / (5 * 1024 * 1024);
-  } catch {
-    return 0;
+    const { data } = supabase.storage.from('training-photos').getPublicUrl(path);
+    return data?.publicUrl || null;
+  } catch (err) {
+    console.warn('training photo upload exception:', err);
+    return null;
   }
 };
 
-// Grava um treino. Retorna a lista atualizada (ou null se o armazenamento encheu).
-// Campos novos (local, mood, positions, partner, rolls, submissions, caught)
-// são todos opcionais e salvam null quando vazios.
-export const addActivity = (
+// Grava um treino no Supabase. Retorna a entry mapeada em sucesso, ou null em erro.
+// Campos opcionais sem suporte no schema atual (local, positions, partner,
+// rolls, submissions, caught, note) são aceitos mas ignorados — ficam pra
+// uma migração futura.
+export const addActivity = async (
   userId,
-  {
-    sport,
-    durationMin,
-    distanceKm,
-    note,
-    photo,
-    local,
-    comment,
-    mood,
-    positions,
-    partner,
-    rolls,
-    submissions,
-    caught
-  } = {}
+  { sport, durationMin, distanceKm, comment, mood, photo } = {}
 ) => {
   if (!userId) return null;
+
   const toInt = (v) => {
     if (v === undefined || v === null || v === '') return null;
     const n = Number(v);
@@ -70,28 +110,33 @@ export const addActivity = (
     const n = Number(String(v).replace(',', '.'));
     return Number.isFinite(n) && n > 0 ? n : null;
   };
-  const entry = {
-    date: new Date().toISOString(),
+
+  // Upload da foto PRIMEIRO. Se falhar, continua sem foto (não quebra o registro).
+  const photoUrl = await uploadTrainingPhoto(userId, photo);
+
+  const payload = {
+    user_id: userId,
     sport: sport || null,
-    durationMin: durationMin ? Number(durationMin) : null,
-    distanceKm: toFloat(distanceKm),
-    note: note ? String(note).slice(0, 240) : null,
-    photo: photo || null,
-    local: local ? String(local).slice(0, 80) : null,
+    duration_min: toInt(durationMin),
+    distance_km: toFloat(distanceKm),
     comment: comment ? String(comment).slice(0, 240) : null,
     mood: mood || null,
-    positions: Array.isArray(positions) && positions.length ? positions.slice(0, 20) : null,
-    partner: partner && partner.name ? { name: String(partner.name), belt: partner.belt || null } : null,
-    rolls: toInt(rolls),
-    submissions: toInt(submissions),
-    caught: toInt(caught)
+    photo_url: photoUrl
   };
-  const list = [entry, ...readActivities(userId)];
+
   try {
-    localStorage.setItem(keyFor(userId), JSON.stringify(list));
-    return list;
-  } catch {
-    // localStorage cheio ou indisponível.
+    const { data, error } = await supabase
+      .from('activities')
+      .insert(payload)
+      .select()
+      .single();
+    if (error) {
+      console.warn('addActivity error:', error.message);
+      return null;
+    }
+    return mapRow(data);
+  } catch (err) {
+    console.warn('addActivity exception:', err);
     return null;
   }
 };
@@ -126,7 +171,6 @@ export const computeStreak = (activities) => {
 };
 
 // Últimos n dias (mais antigo → hoje): true em cada dia com pelo menos um treino.
-// Alimenta a tira de frequência da Home.
 export const weekTrained = (activities, n = 7) => {
   const days = new Set((activities || []).map((a) => dayKey(a.date)));
   const out = [];
@@ -139,7 +183,6 @@ export const weekTrained = (activities, n = 7) => {
 };
 
 // Todas as sessões cujo dia local bate com "hoje". Pode retornar vazio.
-// Usado pra agregar visualmente múltiplos registros do mesmo dia.
 export const todaySessions = (activities) => {
   if (!activities || activities.length === 0) return [];
   const today = dayKey(new Date());

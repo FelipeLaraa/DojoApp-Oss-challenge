@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
+import { migrateLegacyActivities } from '@/lib/activityMigration';
 
 const AuthContext = createContext();
 
@@ -82,7 +83,11 @@ export const AuthProvider = ({ children }) => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       const u = session?.user ?? null;
       setAuthUser(u);
-      if (u) await fetchProfile(u.id);
+      if (u) {
+        await fetchProfile(u.id);
+        // Migração silenciosa de treinos localStorage → Supabase (one-shot).
+        migrateLegacyActivities(u.id);
+      }
       setLoading(false);
     });
 
@@ -94,6 +99,7 @@ export const AuthProvider = ({ children }) => {
       setAuthUser(u);
       if (u) {
         await fetchProfile(u.id);
+        migrateLegacyActivities(u.id);
       } else {
         setProfile(null);
       }

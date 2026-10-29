@@ -75,12 +75,32 @@ como escritas.
 
 ## Agentes
 
-- Renan Nagami (.claude/agents/renan-nagami.md): desenvolvedor. Técnico,
-  analítico, poucas palavras, didático. Para antes de corrigir erros e pergunta.
-- A criar quando as telas-núcleo estiverem de pé: agente DESIGNER (contestador
-  criativo, cara premium — cores, tipografia, conceito). Mandato de discordar.
+- Renan Nagami (.claude/agents/renan-nagami.md): dev + craftsman. Executa
+  código com craft visual embutido (hierarquia, respiro, micro-anim, cor
+  própria). Para antes de corrigir erro arquitetural; corrige direto erro
+  pequeno local; propõe refino de craft só quando tem ganho real, nunca por
+  regra. Em tela nova/refeita, chama Nicole pra walkthrough-persona antes de
+  commitar.
+- Nicole (plugin nicole:nicole): contestadora de produto/UX. Mandato de
+  discordar com alternativa pronta. Skills: `nicole:walkthrough-persona` pra
+  revisão por persona (Rafael, 36, BJJ roxa, 3-4x/sem) e `nicole:direcao-video`
+  pra direção de vídeo curto.
+- Alex PM (.claude/agents/alex-pm.md): PM sênior. Opportunity Assessment
+  formal pra decisões de produto, veredito Build / Explore / Defer / Kill.
 - A criar quando entrar backend: code-reviewer e security-auditor (ver repo
   addyosmani/agent-skills). O security vira obrigatório com dados/senhas.
+
+## Fluxo Nicole 2 passos (telas visuais)
+
+Quando a tarefa produz tela/componente visível ao usuário:
+1. Primeiro corte do código, com craft embutido.
+2. Antes do commit, Nicole revisa com `nicole:walkthrough-persona`.
+3. Aplica o que faz sentido do walkthrough. Discorda com argumento quando for
+   o caso.
+4. Commita.
+
+Pra correção pequena/técnica (bug óbvio, typo, 1 linha), pula Nicole. Ela
+entra quando o resultado é visual.
 
 ## Próximos passos
 

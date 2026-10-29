@@ -16,11 +16,10 @@ import {
 import { toast } from '@/components/ui/use-toast';
 import {
   addActivity,
-  readActivities,
   computeStreak,
-  trainedToday,
-  storageUsageRatio
+  trainedToday
 } from '@/lib/activity';
+import { useActivities } from '@/hooks/useActivities';
 
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MB
 const MAX_SIDE = 800;
@@ -76,7 +75,7 @@ const RegisterActivity = () => {
   const [searchParams] = useSearchParams();
   const cameraMode = searchParams.get('camera') === '1';
 
-  const existing = readActivities(user?.id);
+  const { activities: existing, refresh: refreshActivities } = useActivities(user?.id);
   const streak = useMemo(() => computeStreak(existing), [existing]);
   const doneToday = useMemo(() => trainedToday(existing), [existing]);
   const targetDay = streak + (doneToday ? 0 : 1);
@@ -100,14 +99,11 @@ const RegisterActivity = () => {
 
   const showsDistance = DISTANCE_SPORTS.has(sport);
 
-  const handleRegister = () => {
-    if (storageUsageRatio() >= 0.9) {
-      toast({
-        title: 'Armazenamento quase cheio',
-        description: 'Apague treinos antigos pra continuar registrando com foto.'
-      });
-    }
-    const updated = addActivity(user?.id, {
+  const [saving, setSaving] = useState(false);
+  const handleRegister = async () => {
+    if (saving) return;
+    setSaving(true);
+    const entry = await addActivity(user?.id, {
       sport,
       durationMin: duration,
       distanceKm: showsDistance ? distanceKm : null,
@@ -115,18 +111,21 @@ const RegisterActivity = () => {
       mood,
       photo
     });
-    if (!updated) {
+    if (!entry) {
+      setSaving(false);
       toast({
-        title: 'Armazenamento cheio',
-        description: 'Remova treinos antigos pra registrar este.',
+        title: 'Não foi possível registrar',
+        description: 'Verifique sua conexão e tente de novo.',
         variant: 'destructive'
       });
       return;
     }
-    const newStreak = computeStreak(updated);
+    await refreshActivities();
+    // Streak otimista: adiciona a nova entry à lista local pra calcular.
+    const projectedStreak = computeStreak([entry, ...existing]);
     toast({
       title: 'Treino registrado! 🔥',
-      description: `Sua sequência está em ${newStreak} ${newStreak === 1 ? 'dia' : 'dias'}.`
+      description: `Sua sequência está em ${projectedStreak} ${projectedStreak === 1 ? 'dia' : 'dias'}.`
     });
     navigate('/student');
   };

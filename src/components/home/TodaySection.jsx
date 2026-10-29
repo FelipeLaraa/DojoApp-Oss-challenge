@@ -6,11 +6,11 @@ import ShieldProfile from '@/components/ShieldProfile';
 import WeekStories from '@/components/WeekStories';
 import NextWorkoutChip from '@/components/home/NextWorkoutChip';
 import {
-  readActivities,
   computeStreak,
   trainedToday as didTrainToday,
   todaySessions
 } from '@/lib/activity';
+import { useActivities } from '@/hooks/useActivities';
 import { relativeTime } from '@/lib/time';
 
 // Hero da Home. Escudo grande, chip "sua vez hoje" (quando ainda não treinou),
@@ -19,7 +19,7 @@ const TodaySection = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const myActivities = readActivities(user?.id);
+  const { activities: myActivities } = useActivities(user?.id);
   const streak = computeStreak(myActivities);
   const trained = didTrainToday(myActivities);
   const latest = myActivities[0];

@@ -6,7 +6,8 @@ import { toast } from '@/components/ui/use-toast';
 import ShieldProfile from '@/components/ShieldProfile';
 import WeekStories from '@/components/WeekStories';
 import YearHeatmap from '@/components/YearHeatmap';
-import { readActivities, computeStreak, weekTrained, trainedToday as didTrainToday } from '@/lib/activity';
+import { computeStreak, weekTrained, trainedToday as didTrainToday } from '@/lib/activity';
+import { useActivities } from '@/hooks/useActivities';
 import { supabase } from '@/lib/supabase';
 
 const MOLDURAS = [
@@ -86,7 +87,7 @@ const Profile = () => {
   const [selectedEmblem, setSelectedEmblem] = useState(null);
   const [photo, setPhoto] = useState(null);
 
-  const activities = readActivities(user?.id);
+  const { activities } = useActivities(user?.id);
   const streak = computeStreak(activities);
   const weekCount = weekTrained(activities).filter(Boolean).length;
   const trainedToday = didTrainToday(activities);

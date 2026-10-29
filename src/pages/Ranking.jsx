@@ -5,11 +5,11 @@ import { ChevronRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { characters } from '@/data/characters';
 import {
-  readActivities,
   computeStreak,
   weekTrained,
   trainedToday as didTrainToday
 } from '@/lib/activity';
+import { useActivities } from '@/hooks/useActivities';
 
 // Milestones de sequência considerados "recorde" (coerente com RegisterActivity).
 const MILESTONE_DAYS = new Set([7, 14, 30, 50, 100, 365]);
@@ -102,7 +102,7 @@ const Ranking = () => {
   const [expandedId, setExpandedId] = useState(null);
   const [period, setPeriod] = useState('month'); // 'month' | 'week'
 
-  const myActivities = readActivities(user?.id);
+  const { activities: myActivities } = useActivities(user?.id);
   const self = useMemo(() => buildSelf(user, myActivities), [user, myActivities]);
 
   // Score do período ativo (usado em sort + número lateral).

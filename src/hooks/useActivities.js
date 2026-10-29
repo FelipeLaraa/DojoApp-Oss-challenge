@@ -5,10 +5,15 @@
 // Uso:
 //   const { activities, loading, refresh } = useActivities(user?.id);
 //
-// Depois de um addActivity novo, chama refresh() pra re-puxar.
+// Re-fetcha automaticamente quando:
+//   - o userId muda / monta
+//   - alguém grava um novo treino em qualquer tela (evento global)
+//   - a aba volta ao foco (visibilitychange) — pega mudanças de outra sessão
+//
+// refresh() ainda é exposto pra uso manual.
 
 import { useCallback, useEffect, useState } from 'react';
-import { readActivities } from '@/lib/activity';
+import { readActivities, ACTIVITIES_CHANGED_EVENT } from '@/lib/activity';
 
 export const useActivities = (userId) => {
   const [activities, setActivities] = useState([]);
@@ -29,6 +34,20 @@ export const useActivities = (userId) => {
   useEffect(() => {
     refresh();
   }, [refresh]);
+
+  useEffect(() => {
+    if (!userId) return;
+    const onChanged = () => refresh();
+    const onVisible = () => {
+      if (!document.hidden) refresh();
+    };
+    window.addEventListener(ACTIVITIES_CHANGED_EVENT, onChanged);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      window.removeEventListener(ACTIVITIES_CHANGED_EVENT, onChanged);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [userId, refresh]);
 
   return { activities, loading, refresh };
 };

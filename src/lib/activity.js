@@ -11,6 +11,15 @@
 
 import { supabase } from '@/lib/supabase';
 
+// Bus leve pra notificar consumidores (useActivities) que a lista mudou.
+// Evita que cada tela precise saber manualmente quando re-fetchar depois
+// que alguém grava um treino em outra tela.
+export const ACTIVITIES_CHANGED_EVENT = 'dojo:activities-changed';
+const notifyActivitiesChanged = () => {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new CustomEvent(ACTIVITIES_CHANGED_EVENT));
+};
+
 // Chave de dia no fuso local (YYYY-MM-DD), para a sequência casar com o "hoje"
 // que o usuário enxerga no aparelho.
 export const dayKey = (date) => {
@@ -134,7 +143,9 @@ export const addActivity = async (
       console.warn('addActivity error:', error.message);
       return null;
     }
-    return mapRow(data);
+    const entry = mapRow(data);
+    notifyActivitiesChanged();
+    return entry;
   } catch (err) {
     console.warn('addActivity exception:', err);
     return null;

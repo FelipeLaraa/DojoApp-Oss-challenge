@@ -65,6 +65,7 @@ const Dot = ({ on, highlight }) => {
 
 const countWeek = (week = []) => week.filter(Boolean).length;
 const countMonthWeek = (month = []) => (month.length >= 7 ? month.slice(-7).filter(Boolean).length : 0);
+const countMonth = (month = []) => (month || []).filter(Boolean).length;
 const countPrevWeek = (month = []) =>
   month.length >= 14 ? month.slice(-14, -7).filter(Boolean).length : null;
 
@@ -99,9 +100,13 @@ const Ranking = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [expandedId, setExpandedId] = useState(null);
+  const [period, setPeriod] = useState('month'); // 'month' | 'week'
 
   const myActivities = readActivities(user?.id);
   const self = useMemo(() => buildSelf(user, myActivities), [user, myActivities]);
+
+  // Score do período ativo (usado em sort + número lateral).
+  const scoreOf = (p) => (period === 'month' ? countMonth(p.month) : countMonthWeek(p.month));
 
   // Participantes: amigos (characters) + eu. Se eu já for um character, sobrescreve.
   const people = useMemo(() => {
@@ -120,15 +125,16 @@ const Ranking = () => {
       hasRealHistory: c.id === user?.id ? false : true
     }));
     if (user?.id && !base.some((p) => p.isMe)) base.push(self);
+    const scoreForSort = period === 'month' ? countMonth : countMonthWeek;
     return base
-      .map((p) => ({ ...p, inactive: !p.streak && countMonthWeek(p.month) === 0 }))
+      .map((p) => ({ ...p, inactive: !p.streak && countMonth(p.month) === 0 }))
       .sort(
         (a, b) =>
-          countMonthWeek(b.month) - countMonthWeek(a.month) ||
+          scoreForSort(b.month) - scoreForSort(a.month) ||
           b.streak - a.streak
       )
       .map((p, i) => ({ ...p, position: i + 1 }));
-  }, [user, self]);
+  }, [user, self, period]);
 
   // Headline: 1) EU bati milestone agora (streak é marco) → prioridade máxima.
   //           2) Qualquer character com milestone.hitAt < 7 dias.
@@ -166,9 +172,35 @@ const Ranking = () => {
       >
         {/* Header */}
         <div className="px-5 pt-6 pb-3">
-          <h1 className="text-2xl font-extrabold tracking-tight">Ranking</h1>
-          <div className="mt-1 text-[12px] text-white/55 font-medium capitalize">
-            {weekday} · <span className="text-white/75">{closeLabel}</span>
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h1 className="text-2xl font-extrabold tracking-tight">Ranking</h1>
+              <div className="mt-1 text-[12px] text-white/55 font-medium capitalize">
+                {weekday} · <span className="text-white/75">{closeLabel}</span>
+              </div>
+            </div>
+
+            {/* Toggle de período — mês default, semana opcional */}
+            <div className="inline-flex items-center gap-0.5 p-0.5 rounded-full bg-white/5 border border-white/10">
+              {[
+                { id: 'month', label: 'Mês' },
+                { id: 'week', label: 'Semana' }
+              ].map((t) => {
+                const active = period === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setPeriod(t.id)}
+                    className={`px-3 py-1.5 rounded-full text-[11px] font-bold tracking-wide transition-colors ${
+                      active ? 'bg-white/10 text-white' : 'text-white/50 hover:text-white/80'
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
@@ -205,40 +237,57 @@ const Ranking = () => {
             {people.map((p, idx) => {
               const pos = idx;
               const weeks = groupMonth(p.month);
-              const wc = countMonthWeek(p.month);
+              const score = scoreOf(p);
+              const periodLabel = period === 'month' ? 'mês' : 'semana';
               const prev = countPrevWeek(p.month);
               const isLast = idx === people.length - 1;
               const isOpen = expandedId === p.id;
 
+              const goToProfile = (e) => {
+                e.stopPropagation();
+                if (p.isMe) navigate('/profile');
+                else navigate(`/athlete/${p.id}`);
+              };
+
               return (
                 <div key={p.id} className={!isLast ? 'border-b border-white/10' : ''}>
-                  <button
-                    type="button"
+                  <div
+                    role="button"
+                    tabIndex={0}
                     onClick={() => setExpandedId(isOpen ? null : p.id)}
-                    className={`w-full flex items-center gap-2.5 px-3.5 py-3.5 text-left transition-colors ${
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') setExpandedId(isOpen ? null : p.id);
+                    }}
+                    className={`w-full flex items-center gap-2.5 px-3.5 py-3.5 text-left cursor-pointer transition-colors ${
                       p.isMe ? 'bg-[#ff6b4a]/8' : ''
                     }`}
                   >
                     <div className={`w-[18px] text-center text-[13px] font-black ${posNumberClass(pos, p.inactive)}`}>
                       {pos + 1}
                     </div>
-                    <div
-                      className={`w-[30px] h-[30px] rounded-full flex-shrink-0 flex items-center justify-center text-xs font-extrabold border-[1.5px] ${avatarByPos(pos, p.inactive)}`}
+                    <button
+                      type="button"
+                      onClick={goToProfile}
+                      aria-label={`Ver perfil de ${p.name}`}
+                      className={`w-[30px] h-[30px] rounded-full flex-shrink-0 flex items-center justify-center text-xs font-extrabold border-[1.5px] transition-transform active:scale-95 hover:brightness-110 ${avatarByPos(pos, p.inactive)}`}
                     >
                       {p.photo ? (
                         <img src={p.photo} alt="" className="w-full h-full rounded-full object-cover" />
                       ) : (
                         p.name[0]
                       )}
-                    </div>
+                    </button>
                     <div className="flex-1 min-w-0">
-                      <div
-                        className={`text-[13px] font-bold tracking-tight leading-none ${
+                      <button
+                        type="button"
+                        onClick={goToProfile}
+                        className={`inline-flex items-center gap-1 text-[13px] font-bold tracking-tight leading-none text-left active:opacity-70 ${
                           p.inactive ? 'text-white/55' : p.isMe ? 'text-[#ff6b4a]' : 'text-white'
                         }`}
                       >
-                        {p.name}
-                      </div>
+                        <span>{p.name}</span>
+                        <ChevronRight className="w-3 h-3 text-white/35" />
+                      </button>
                       <div className="mt-2 flex items-center gap-[3px]">
                         {weeks.map((week, wi) => (
                           <div key={wi} className={`flex gap-[1.5px] ${wi > 0 ? 'ml-[3px]' : ''}`}>
@@ -256,16 +305,16 @@ const Ranking = () => {
                           p.inactive ? 'text-white/55' : 'text-white'
                         }`}
                       >
-                        {wc}x
+                        {score}x
                       </span>
                       <span className="text-[9px] uppercase tracking-wider font-bold text-white/35">
-                        semana
+                        {periodLabel}
                       </span>
                     </div>
                     <ChevronRight
                       className={`w-4 h-4 text-white/25 transition-transform ${isOpen ? 'rotate-90' : ''}`}
                     />
-                  </button>
+                  </div>
 
                   <AnimatePresence initial={false}>
                     {isOpen && (
@@ -285,21 +334,9 @@ const Ranking = () => {
                           </span>
                           <span className="w-[3px] h-[3px] rounded-full bg-white/20" />
                           <span>
-                            hit atual:{' '}
+                            sequência:{' '}
                             <span className="text-white font-bold">{p.streak}d</span>
                           </span>
-                          {!p.isMe && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(`/athlete/${p.id}`);
-                              }}
-                              className="ml-auto text-[11px] font-bold text-[#ff6b4a] hover:text-[#ff8666]"
-                            >
-                              ver perfil →
-                            </button>
-                          )}
                         </div>
                       </motion.div>
                     )}

@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Map, Swords, BarChart3, Unlock } from 'lucide-react';
 import ShieldProfile from '@/components/ShieldProfile';
 import WeekStories from '@/components/WeekStories';
+import PublicYearHeatmap from '@/components/PublicYearHeatmap';
 import { characters } from '@/data/characters';
 
 // TODO (Etapa 4): migrar leitura para a tabela public.profiles quando os
@@ -156,6 +157,11 @@ const AthleteProfile = () => {
               <div className="text-[11px] text-white/55 mt-0.5 font-medium">{distanceSub}</div>
             )}
           </div>
+        </div>
+
+        {/* Heatmap 6m (público, placeholder no DaySheet) */}
+        <div className="px-5 pt-5">
+          <PublicYearHeatmap monthBool={athlete.month} />
         </div>
 
         {/* PRO teaser */}

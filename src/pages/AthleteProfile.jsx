@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Map, Swords, BarChart3, Unlock } from 'lucide-react';
 import ShieldProfile from '@/components/ShieldProfile';
 import WeekStories from '@/components/WeekStories';
-import PublicYearHeatmap from '@/components/PublicYearHeatmap';
+import YearHeatmap from '@/components/YearHeatmap';
 import { characters } from '@/data/characters';
 
 // TODO (Etapa 4): migrar leitura para a tabela public.profiles quando os
@@ -16,21 +16,6 @@ const mergeSaved = (character) => {
   } catch {
     return character;
   }
-};
-
-// Deriva "atividades" fake dos últimos 7 dias a partir do month[30]
-// para alimentar o WeekStories (sem precisar de registro real).
-const activitiesFromMonth = (month = []) => {
-  const last7 = month.slice(-7); // 23..29
-  const out = [];
-  const today = new Date();
-  last7.forEach((trained, i) => {
-    if (!trained) return;
-    const d = new Date(today);
-    d.setDate(today.getDate() - (6 - i));
-    out.push({ date: d.toISOString(), sport: null, photo: null });
-  });
-  return out;
 };
 
 const monthWorkoutCount = (month = []) => month.filter(Boolean).length;
@@ -61,7 +46,7 @@ const AthleteProfile = () => {
   }
 
   const athlete = mergeSaved(base);
-  const activities = activitiesFromMonth(athlete.month);
+  const activities = athlete.activities || [];
   const monthCount = monthWorkoutCount(athlete.month);
   const isDistanceSport = athlete.mainSport === 'Corrida' || athlete.mainSport === 'Natação';
   const distanceSub = isDistanceSport && athlete.activity?.headline?.includes('km')
@@ -159,9 +144,9 @@ const AthleteProfile = () => {
           </div>
         </div>
 
-        {/* Heatmap 6m (público, placeholder no DaySheet) */}
+        {/* Heatmap 6m — mesmo formato do perfil próprio (3 tons, DaySheet) */}
         <div className="px-5 pt-5">
-          <PublicYearHeatmap monthBool={athlete.month} />
+          <YearHeatmap activities={activities} athleteId={athlete.id} />
         </div>
 
         {/* PRO teaser */}

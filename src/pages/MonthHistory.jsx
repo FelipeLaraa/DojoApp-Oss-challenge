@@ -1,10 +1,11 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActivities } from '@/hooks/useActivities';
 import { dayKey } from '@/lib/activity';
+import { characters } from '@/data/characters';
 import SportIcon from '@/lib/sportIcon.jsx';
 
 // Tela cheia navegável do mês: lista cronológica agrupada por dia,
@@ -52,9 +53,14 @@ const formatSessionMeta = (s) => {
 
 const MonthHistory = () => {
   const { yyyyMM } = useParams();
+  const [searchParams] = useSearchParams();
+  const athleteId = searchParams.get('user');
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { activities, loading } = useActivities(user?.id);
+  const { activities: ownActivities, loading: ownLoading } = useActivities(athleteId ? null : user?.id);
+  const athlete = athleteId ? characters.find((c) => c.id === athleteId) : null;
+  const activities = athleteId ? (athlete?.activities || []) : ownActivities;
+  const loading = athleteId ? false : ownLoading;
 
   const { year, month } = parseParam(yyyyMM);
 
@@ -84,16 +90,17 @@ const MonthHistory = () => {
     return { grouped: list, totalSessions: inMonth.length, totalDays: list.length };
   }, [activities, year, month]);
 
+  const suffix = athleteId ? `?user=${athleteId}` : '';
   const goPrev = () => {
     const d = new Date(year, month - 1, 1);
-    navigate(`/history/${toParam(d.getFullYear(), d.getMonth())}`, { replace: true });
+    navigate(`/history/${toParam(d.getFullYear(), d.getMonth())}${suffix}`, { replace: true });
   };
   const goNext = () => {
     const d = new Date(year, month + 1, 1);
-    navigate(`/history/${toParam(d.getFullYear(), d.getMonth())}`, { replace: true });
+    navigate(`/history/${toParam(d.getFullYear(), d.getMonth())}${suffix}`, { replace: true });
   };
 
-  const monthLabel = MONTHS_PT[month];
+  const monthLabel = athlete ? `${MONTHS_PT[month]} de ${athlete.name}` : MONTHS_PT[month];
 
   return (
     <div className="min-h-screen dojo-gradient text-white pb-28">
@@ -119,7 +126,7 @@ const MonthHistory = () => {
               <ChevronLeft className="w-5 h-5 text-white/70" />
             </button>
 
-            <div className="text-base font-bold text-white min-w-[110px] text-center capitalize">
+            <div className="text-base font-bold text-white min-w-[160px] text-center capitalize">
               {monthLabel}
               {new Date().getFullYear() !== year && (
                 <span className="ml-1 text-white/40 font-medium">{year}</span>

@@ -29,7 +29,7 @@ const MONTHS_PT = [
   'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'
 ];
 
-const YearHeatmap = ({ activities }) => {
+const YearHeatmap = ({ activities, athleteId = null }) => {
   const navigate = useNavigate();
   const [openDay, setOpenDay] = useState(null); // { key, date, sessions }
 
@@ -128,7 +128,7 @@ const YearHeatmap = ({ activities }) => {
       {/* Link ver mês */}
       <button
         type="button"
-        onClick={() => navigate(`/history/${monthParam}`)}
+        onClick={() => navigate(`/history/${monthParam}${athleteId ? `?user=${athleteId}` : ''}`)}
         className="mt-2 w-full flex items-center justify-between px-4 py-3 text-white/70 hover:text-white active:scale-[0.99] transition-all"
       >
         <span className="text-sm font-medium">Ver mês de {currentMonthName}</span>

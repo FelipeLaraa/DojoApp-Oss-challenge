@@ -238,7 +238,13 @@ export const characters = [
     milestone: { days: 7, hitAt: daysAgoISO(5) },
     reactions: { Fogo: 7, 'Força': 3, Cutucar: 1 },
     activity: { headline: 'Eclético', detail: '3 modalidades diferentes este mês' },
-    lastPhoto: { url: gradientPhoto('#ff7a59', '#f4502f', '🥋'), postedAt: hoursAgoISO(24) }
+    lastPhoto: {
+      url: gradientPhoto('#ff7a59', '#f4502f', '🥋'),
+      postedAt: hoursAgoISO(24),
+      sport: 'BJJ',
+      durationMin: 75,
+      mood: 'em alta'
+    }
   },
   {
     id: 'nicole',
@@ -263,7 +269,13 @@ export const characters = [
     milestone: { days: 14, hitAt: daysAgoISO(9) },
     reactions: { Fogo: 9, 'Força': 4, Cutucar: 0 },
     activity: { headline: '50 km', detail: 'percorridos este mês' },
-    lastPhoto: { url: gradientPhoto('#d4af37', '#8b6f1f', '🏃'), postedAt: hoursAgoISO(3) }
+    lastPhoto: {
+      url: gradientPhoto('#d4af37', '#8b6f1f', '🏃'),
+      postedAt: hoursAgoISO(3),
+      sport: 'Corrida',
+      durationMin: 48,
+      mood: 'leve'
+    }
   },
   {
     id: 'ciclano',
@@ -288,6 +300,12 @@ export const characters = [
     milestone: null,
     reactions: { Fogo: 1, 'Força': 0, Cutucar: 3 },
     activity: { headline: 'Inativo', detail: 'sem treinos recentes', inactive: true },
-    lastPhoto: { url: gradientPhoto('#3a3a3a', '#1a1a1a', '🏋'), postedAt: daysAgoISO(5) }
+    lastPhoto: {
+      url: gradientPhoto('#3a3a3a', '#1a1a1a', '🏋'),
+      postedAt: daysAgoISO(5),
+      sport: 'Musculação',
+      durationMin: 45,
+      mood: 'sofreu'
+    }
   }
 ];

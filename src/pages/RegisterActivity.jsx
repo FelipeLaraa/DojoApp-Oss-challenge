@@ -21,36 +21,10 @@ import {
   computeStreak,
   trainedToday
 } from '@/lib/activity';
+import { compressImage } from '@/lib/image';
 import { useActivities } from '@/hooks/useActivities';
 
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MB
-const MAX_SIDE = 800;
-const JPEG_QUALITY = 0.75;
-
-// Lê o arquivo, redimensiona pra que o maior lado seja MAX_SIDE (mantendo a
-// proporção) e exporta como JPEG com qualidade 0.75. Devolve um dataURL.
-const compressImage = (file) =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error('read_error'));
-    reader.onload = () => {
-      const img = new Image();
-      img.onerror = () => reject(new Error('decode_error'));
-      img.onload = () => {
-        const scale = Math.min(1, MAX_SIDE / Math.max(img.width, img.height));
-        const w = Math.round(img.width * scale);
-        const h = Math.round(img.height * scale);
-        const canvas = document.createElement('canvas');
-        canvas.width = w;
-        canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL('image/jpeg', JPEG_QUALITY));
-      };
-      img.src = reader.result;
-    };
-    reader.readAsDataURL(file);
-  });
 
 const SPORTS = ['BJJ', 'Wrestling', 'Corrida', 'Musculação', 'Boxe', 'Luta livre', 'Natação'];
 
@@ -157,11 +131,13 @@ const RegisterActivity = () => {
       return;
     }
     try {
-      const dataUrl = await compressImage(file);
+      const { dataUrl } = await compressImage(file);
       setPhoto(dataUrl);
-    } catch {
+    } catch (err) {
       toast({
-        title: 'Não foi possível ler a imagem',
+        title: err?.message === 'too_large'
+          ? 'Imagem pesada demais mesmo comprimida'
+          : 'Não foi possível ler a imagem',
         description: 'Tente outra foto (JPEG ou PNG).',
         variant: 'destructive'
       });

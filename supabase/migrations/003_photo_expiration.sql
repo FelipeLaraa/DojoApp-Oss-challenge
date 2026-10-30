@@ -38,7 +38,7 @@ create index if not exists activities_photo_expires_idx
 create or replace function public.set_photo_expiration()
 returns trigger
 language plpgsql
-as $$
+as $fn_set_expiration$
 begin
   if new.photo_url is not null and new.photo_expires_at is null then
     new.photo_expires_at := now() + interval '60 days';
@@ -47,7 +47,7 @@ begin
   end if;
   return new;
 end;
-$$;
+$fn_set_expiration$;
 
 drop trigger if exists activities_set_photo_expiration on public.activities;
 create trigger activities_set_photo_expiration
@@ -59,7 +59,7 @@ create or replace function public.delete_expired_photos()
 returns integer
 language plpgsql
 security definer
-as $$
+as $fn_delete_expired$
 declare
   rec record;
   deleted_count integer := 0;
@@ -102,10 +102,10 @@ begin
 
   return deleted_count;
 end;
-$$;
+$fn_delete_expired$;
 
 -- 4) Agendar via pg_cron se disponível (NO-OP silencioso se não estiver)
-do $$
+do $do_schedule_cron$
 begin
   if exists (select 1 from pg_extension where extname = 'pg_cron') then
     if exists (select 1 from cron.job where jobname = 'dojo_delete_expired_photos') then
@@ -114,8 +114,8 @@ begin
     perform cron.schedule(
       'dojo_delete_expired_photos',
       '0 3 * * *',
-      $cmd$ select public.delete_expired_photos(); $cmd$
+      $cron_cmd$ select public.delete_expired_photos(); $cron_cmd$
     );
   end if;
 end;
-$$;
+$do_schedule_cron$;

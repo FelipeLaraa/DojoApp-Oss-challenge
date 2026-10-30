@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Send, ChevronDown, ChevronRight, Users, List, X, Clock } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
+import { ToastAction } from '@/components/ui/toast';
 import ShieldProfile from '@/components/ShieldProfile';
 import FriendsFeed from '@/components/home/FriendsFeed';
 import NotificationBell from '@/components/NotificationBell';
@@ -102,22 +103,65 @@ const Friends = () => {
 
   const sheetState = sheetFriend ? sheetFriend._state || classifyFriend(sheetFriend) : 'ok';
 
-  const sendIncentive = (friend, text) => {
+  const writeNotifications = (friendId, list) => {
+    try {
+      localStorage.setItem(`dojoNotifications_${friendId}`, JSON.stringify(list));
+    } catch {
+      /* storage cheio — ignora */
+    }
+  };
+
+  const sendIncentive = (friend, text, { silent = false } = {}) => {
     const trimmed = text.trim();
-    if (!trimmed) return;
+    if (!trimmed) return null;
     const notif = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       from: user?.name || 'Alguém',
       fromId: user?.id,
       item: 'Incentivo',
       message: trimmed,
       date: new Date().toISOString()
     };
-    const key = `dojoNotifications_${friend.id}`;
     const current = readNotifications(friend.id);
-    localStorage.setItem(key, JSON.stringify([notif, ...current]));
+    writeNotifications(friend.id, [notif, ...current]);
+    if (!silent) {
+      toast({
+        title: `Enviado para ${friend.name}`,
+        description: `"${trimmed}"`
+      });
+    }
+    return notif;
+  };
+
+  // Default contextual pro envio rápido do botão ícone (sem abrir sheet).
+  const quickDefault = (state) => {
+    if (state === 'sumido') return 'tô sentindo sua falta';
+    if (state === 'alta') return 'monstro';
+    return 'bora treinar';
+  };
+
+  // Envio rápido com undo: 1 toque manda, toast de 4s dá chance de desfazer
+  // (remove a notificação criada). Row completo continua abrindo o sheet.
+  const sendQuick = (friend) => {
+    const text = quickDefault(friend._state);
+    const notif = sendIncentive(friend, text, { silent: true });
+    if (!notif) return;
     toast({
-      title: `Enviado para ${friend.name}`,
-      description: `"${trimmed}"`
+      title: `Enviado pra ${friend.name}`,
+      description: `"${text}"`,
+      duration: 4000,
+      action: (
+        <ToastAction
+          altText="Desfazer envio"
+          onClick={() => {
+            const current = readNotifications(friend.id);
+            writeNotifications(friend.id, current.filter((n) => n.id !== notif.id));
+          }}
+          className="border-white/20 text-white/85 hover:bg-white/10"
+        >
+          Desfazer
+        </ToastAction>
+      )
     });
   };
 
@@ -242,7 +286,11 @@ const Friends = () => {
                     </div>
                   </div>
 
-                  <div className="rounded-[18px] bg-[#141414] border border-white/10 overflow-hidden">
+                  <div
+                    className={`rounded-[18px] bg-[#141414] border border-white/10 overflow-hidden ${
+                      incentiveList.length > 6 ? 'max-h-[360px] overflow-y-auto' : ''
+                    }`}
+                  >
                     {incentiveList.length === 0 ? (
                       <div className="px-4 py-6 text-center text-[12px] text-white/45 font-medium">
                         {incentiveTab === 'empurrao'
@@ -253,76 +301,86 @@ const Friends = () => {
                       incentiveList.map((friend, idx) => {
                         const isLast = idx === incentiveList.length - 1;
                         const days = daysSinceLastWorkout(friend);
-                        let dotColor = '';
-                        let dotIcon = null;
-                        let subLabel = friend.activity?.headline || friend.modality;
-                        if (friend._state === 'sumido') {
-                          if (days === Infinity || (days != null && days >= 30)) {
-                            dotColor = 'bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.6)]';
-                            dotIcon = <Clock className="w-2.5 h-2.5 text-black" />;
-                            subLabel = days === Infinity ? 'sem treino no mês' : `sumido há ${days}d`;
-                          } else if (days != null && days >= 14) {
-                            dotColor = 'bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.5)]';
-                            subLabel = `sumido há ${days}d`;
-                          } else {
-                            dotColor = 'bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.5)]';
-                            subLabel = days != null ? `sumido há ${days}d` : 'inativo';
-                          }
-                        } else if (friend._state === 'alta') {
-                          dotColor =
-                            friend.streak >= 14
-                              ? 'bg-[#d4af37] shadow-[0_0_6px_rgba(212,175,55,0.6)]'
-                              : 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.5)]';
-                          subLabel =
-                            friend.streak >= 7
-                              ? `${friend.streak} dias de hit`
-                              : `${(friend.week || []).filter(Boolean).length}/7 na semana`;
+                        const isHard = days === Infinity || (days != null && days >= 14);
+                        const isSumido = friend._state === 'sumido';
+                        const isAlta = friend._state === 'alta';
+
+                        // Badge textual à direita do nome. "Em alta" sem streak
+                        // ≥7 fica sem badge — ring/foto já comunicam atividade.
+                        let badgeText = null;
+                        let badgeClass = '';
+                        if (isSumido) {
+                          badgeText = days === Infinity ? 'sem treino no mês' : `parado há ${days}d`;
+                          badgeClass = isHard
+                            ? 'bg-rose-500/15 text-rose-300 border-rose-500/30'
+                            : 'bg-amber-400/15 text-amber-200 border-amber-400/30';
+                        } else if (isAlta && friend.streak >= 7) {
+                          badgeText = `${friend.streak}d hit`;
+                          badgeClass = 'bg-[#d4af37]/15 text-[#d4af37] border-[#d4af37]/35';
                         }
+
+                        // Cor do botão de envio rápido — mesmo tom do badge.
+                        const sendBtnClass = isSumido
+                          ? 'bg-gradient-to-br from-[#ff6b4a] to-[#ff4d2e] text-white shadow-[0_4px_10px_rgba(255,77,46,0.35)]'
+                          : 'bg-gradient-to-br from-[#f5d274] to-[#d4af37] text-[#0a0a0a] shadow-[0_4px_10px_rgba(212,175,55,0.35)]';
+
                         return (
-                          <button
+                          <div
                             key={friend.id}
-                            type="button"
+                            role="button"
+                            tabIndex={0}
                             onClick={() => openSheet(friend)}
-                            className={`w-full flex items-center gap-3 px-3.5 py-3 text-left hover:bg-white/[0.03] transition-colors ${
-                              !isLast ? 'border-b border-white/10' : ''
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') openSheet(friend);
+                            }}
+                            className={`flex items-center gap-2.5 px-3 py-2 hover:bg-white/[0.03] transition-colors cursor-pointer ${
+                              !isLast ? 'border-b border-white/5' : ''
                             }`}
                           >
-                            <div className="relative flex-shrink-0">
-                              <ShieldProfile
-                                type={friend.frame}
-                                emblem={friend.emblem}
-                                hit={friend.streak}
-                                size="small"
-                                photo={friend.photo}
-                              />
-                              <span
-                                className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full ring-2 ring-[#141414] flex items-center justify-center ${dotColor}`}
-                              >
-                                {dotIcon}
-                              </span>
+                            {/* Avatar neutro 44px — foto do amigo respira */}
+                            <div className="w-11 h-11 rounded-full flex-shrink-0 ring-1 ring-white/10 bg-gradient-to-br from-[#2a2a2a] to-[#141414] overflow-hidden flex items-center justify-center">
+                              {friend.photo ? (
+                                <img src={friend.photo} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <span className="text-[13px] font-extrabold text-white/80">
+                                  {friend.name[0]}
+                                </span>
+                              )}
                             </div>
+
                             <div className="flex-1 min-w-0">
-                              <div className="text-[13px] font-bold tracking-tight text-white truncate">
-                                {friend.name}
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <span className="text-[13px] font-bold tracking-tight text-white truncate">
+                                  {friend.name}
+                                </span>
+                                {badgeText && (
+                                  <span
+                                    className={`text-[9.5px] font-bold uppercase tracking-wider px-1.5 py-[1.5px] rounded-full border whitespace-nowrap ${badgeClass}`}
+                                  >
+                                    {badgeText}
+                                  </span>
+                                )}
                               </div>
-                              <div
-                                className={`text-[11.5px] font-medium truncate ${
-                                  friend._state === 'sumido'
-                                    ? days != null && days >= 14
-                                      ? 'text-rose-300/80'
-                                      : 'text-amber-200/80'
-                                    : friend._state === 'alta'
-                                    ? friend.streak >= 14
-                                      ? 'text-[#d4af37]/90'
-                                      : 'text-emerald-300/80'
-                                    : 'text-white/55'
-                                }`}
-                              >
-                                {subLabel}
+                              <div className="text-[11px] text-white/45 font-medium truncate mt-0.5">
+                                {friend.mainSport || friend.modality}
                               </div>
                             </div>
-                            <ChevronRight className="w-4 h-4 text-white/25 flex-shrink-0" />
-                          </button>
+
+                            {/* Envio rápido com Undo — 1 toque manda o default
+                                contextual. Toque no row (fora do botão) abre o
+                                sheet pra mensagem custom. */}
+                            <button
+                              type="button"
+                              aria-label={`Enviar incentivo rápido pra ${friend.name}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                sendQuick(friend);
+                              }}
+                              className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 active:scale-90 transition-transform ${sendBtnClass}`}
+                            >
+                              <Send className="w-4 h-4" />
+                            </button>
+                          </div>
                         );
                       })
                     )}

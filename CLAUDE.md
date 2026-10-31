@@ -30,25 +30,42 @@ A Nicole (plugin) traz o julgamento geral. Aqui fica só o específico do Dojo:
 
 Base gerada por vibe coding (Hostinger Horizons), reconstruída peça a peça.
 Stack: React 18 + Vite 4, Tailwind, react-router, framer-motion, lucide-react.
-Persistência: localStorage, com MEMÓRIA POR PERFIL (chave dojoProfile_<id>).
-NÃO existe ainda: backend, banco de dados, autenticação real.
+Backend: Supabase (SDK `@supabase/supabase-js` importado via esm.sh em
+src/lib/supabase.js; precisa de `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`
+no `.env`). SQL em supabase/schema.sql + supabase/migrations/001–003 (rodados
+à mão no SQL Editor). PWA básico (public/manifest.webmanifest + sw.js).
+
+JÁ É REAL (Supabase): autenticação e-mail/senha, perfil (tabela profiles +
+bucket profile-photos), treinos (tabela activities + bucket training-photos,
+foto expira em 60 dias), próximo treino (profiles.next_workout), migração
+única de treinos antigos do localStorage no login.
+
+AINDA É LOCAL/FIXO: amigos (os 4 personagens de src/data/characters.js, com
+~180 dias de histórico sintético) — não há amizades reais ainda (tabela
+friendships existe, sem uso no front); notificações exibidas no sininho/painel
+e na aba Amigos (localStorage `dojoNotifications_<id>`, mesmo com a lib
+src/lib/notifications.js e o hook useNotifications prontos no Supabase, ainda
+não ligados à UI); contador/limite diário de reações (localStorage); stories
+vistos (localStorage).
 
 Telas funcionando:
-- Login: entrada rápida com 4 personagens fictícios (Felipe, Thiago, Nicole,
-  Ciclano) em src/data/characters.js. Cada um tem faixa, moldura, modalidade,
-  bio e status de atividade.
-- Perfil: foto da galeria, @usuário, biografia (150 chars), modalidade principal,
-  molduras temáticas por esporte (Luta/Levantamento/Corrida/Natação) com emblema.
-  Ordem: foto, informações/bio, molduras, progresso, estatísticas, salvar.
-- Amigos: feed dos amigos com status, enviar incentivo (item + mensagem), perfil
-  público do atleta (/athlete/:id), notificações recebidas.
-- Home (feed social): seu resumo + botão Registrar (placeholder), "Precisa de um
-  empurrão" (inativos), feed de atividade dos amigos. 3 reações de 1 toque
-  (Fogo/Força/Cutucar). Sininho de notificações com badge + responder/devolver.
-- Navegação: lateral no desktop, inferior no mobile. Aba Amigos incluída.
-
-Dados fixos que viram reais quando houver "Registrar atividade": status
-(50 km, 4 dias, etc.), tempos ("há 3 h"), estatísticas do perfil.
+- Login: cadastro e entrada reais por e-mail/senha (nome, @usuário). A entrada
+  rápida com personagens saiu.
+- Home (/student, "Seu dia"): resumo com sequência (streak), semana, botão de
+  treinar (abre a câmera), próximo treino, marcos, stories e feed dos amigos,
+  ranking dos amigos, sininho de notificações.
+- Registrar atividade (/register, aba "Treinar"): esporte, duração, distância,
+  humor, comentário e foto (comprimida), com modal de confirmação. Grava no
+  Supabase e alimenta streak, heatmap e Home.
+- Perfil: foto, @usuário, bio (150 chars), modalidade, molduras temáticas por
+  esporte com emblema, sequência/estatísticas reais, heatmap anual
+  (3 tons + folha do dia) e histórico mensal (/history/:yyyyMM).
+- Amigos: feed dos amigos (fictícios), incentivo compacto (item + mensagem),
+  notificações, perfil público (/athlete/:id) com heatmap de 6 meses.
+- Ranking: amigos + você, por mês/semana.
+- Navegação: lateral no desktop, inferior no mobile.
+- Restos do app-academia antigo ainda roteados: /teacher, /academy,
+  /teacher-checklist/:classId (fora do foco B2C).
 
 ## Modo de trabalho (combinado com o Felipe)
 
@@ -104,9 +121,12 @@ entra quando o resultado é visual.
 
 ## Próximos passos
 
-1. Registrar atividade — torna os status e tempos reais (destrava a gamificação).
-2. Agente designer — cara premium depois do núcleo pronto.
-3. Backend (Supabase) — login real, dados multi-aparelho; aí entram os revisores.
+1. Amigos reais — friendships no Supabase, trocar os personagens fictícios por
+   usuários reais (perfil público, feed, ranking).
+2. Notificações e reações no Supabase — ligar a UI à lib/hook já prontos e
+   mover o limite diário de reações pro banco.
+3. Agente designer — cara premium depois do núcleo pronto.
+4. Revisores (code-reviewer e security-auditor) — já há backend e senhas.
 
 ## Pendências anotadas
 

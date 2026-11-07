@@ -29,26 +29,47 @@ A Nicole (plugin) traz o julgamento geral. Aqui fica só o específico do Dojo:
 ## Estado real do código
 
 Base gerada por vibe coding (Hostinger Horizons), reconstruída peça a peça.
-Stack: React 18 + Vite 4, Tailwind, react-router, framer-motion, lucide-react.
-Persistência: localStorage, com MEMÓRIA POR PERFIL (chave dojoProfile_<id>).
-NÃO existe ainda: backend, banco de dados, autenticação real.
+Stack: React 18 + Vite 4, Tailwind, react-router, framer-motion, lucide-react,
+Supabase (Auth + Postgres + Storage; SDK importado via esm.sh em
+src/lib/supabase.js, sem pacote npm; exige VITE_SUPABASE_URL e
+VITE_SUPABASE_ANON_KEY — ver .env.example).
+Schema e migrações SQL em supabase/ (schema.sql + migrations/001–003, rodadas
+manualmente pelo Felipe no SQL Editor).
+
+Já no Supabase (real, multi-aparelho): login por e-mail/senha (AuthContext),
+perfil (tabela profiles, foto no bucket profile-photos), atividades registradas
+(tabela activities, foto de treino no bucket training-photos com expiração de
+60 dias). Treinos antigos do localStorage migram sozinhos no login
+(activityMigration.js).
+
+AINDA em localStorage/fixo: notificações da UI (sininho e painel leem/gravam
+dojoNotifications_<id>; src/lib/notifications.js e useNotifications.js já
+existem no Supabase mas NENHUM componente os usa ainda), contador e limite
+diário de reações (reactions.js), "stories vistos". Amigos são os 4 personagens
+fictícios de src/data/characters.js (Felipe, Thiago, Nicole, Ciclano, com ~180
+dias de histórico sintético); a tabela friendships existe no schema mas o app
+não a usa.
 
 Telas funcionando:
-- Login: entrada rápida com 4 personagens fictícios (Felipe, Thiago, Nicole,
-  Ciclano) em src/data/characters.js. Cada um tem faixa, moldura, modalidade,
-  bio e status de atividade.
-- Perfil: foto da galeria, @usuário, biografia (150 chars), modalidade principal,
-  molduras temáticas por esporte (Luta/Levantamento/Corrida/Natação) com emblema.
-  Ordem: foto, informações/bio, molduras, progresso, estatísticas, salvar.
-- Amigos: feed dos amigos com status, enviar incentivo (item + mensagem), perfil
-  público do atleta (/athlete/:id), notificações recebidas.
-- Home (feed social): seu resumo + botão Registrar (placeholder), "Precisa de um
-  empurrão" (inativos), feed de atividade dos amigos. 3 reações de 1 toque
-  (Fogo/Força/Cutucar). Sininho de notificações com badge + responder/devolver.
-- Navegação: lateral no desktop, inferior no mobile. Aba Amigos incluída.
-
-Dados fixos que viram reais quando houver "Registrar atividade": status
-(50 km, 4 dias, etc.), tempos ("há 3 h"), estatísticas do perfil.
+- Login: cadastro e entrada reais (e-mail, senha, nome, @usuário). A entrada
+  rápida por personagem foi removida.
+- Home (/student): Seu dia — escudo, streak, chip de próximo treino, botão
+  Treinar, resumo do dia, stories da semana, sininho de notificações.
+- Registrar atividade (/register): modalidade, duração, distância, humor,
+  comentário e foto (comprimida), com modal de confirmação. Alimenta streak,
+  tira da semana e heatmap.
+- Histórico: heatmap anual (3 tons, DaySheet) e histórico mensal navegável
+  (/history/:yyyyMM).
+- Amigos (/friends): feed, stories, enviar incentivo (item + mensagem, lista
+  compacta), 3 reações de 1 toque (Fogo/Força/Cutucar, com limite diário),
+  cards de marco de sequência.
+- Ranking (/ranking): amigos + você, calculado a partir das atividades.
+- Perfil: foto, @usuário, bio (150 chars), modalidade, molduras temáticas
+  por esporte com emblema, estatísticas, salvar (grava no Supabase).
+- Perfil público (/athlete/:id): somente leitura, com heatmap de 6 meses.
+- Navegação: lateral no desktop, inferior no mobile (aba Treinar leva a /register).
+- Rotas /teacher, /academy e /teacher-checklist são resquício do app-academia
+  antigo, ainda no código.
 
 ## Modo de trabalho (combinado com o Felipe)
 
@@ -87,7 +108,7 @@ como escritas.
   pra direção de vídeo curto.
 - Alex PM (.claude/agents/alex-pm.md): PM sênior. Opportunity Assessment
   formal pra decisões de produto, veredito Build / Explore / Defer / Kill.
-- A criar quando entrar backend: code-reviewer e security-auditor (ver repo
+- A criar (o backend Supabase já entrou): code-reviewer e security-auditor (ver repo
   addyosmani/agent-skills). O security vira obrigatório com dados/senhas.
 
 ## Fluxo Nicole 2 passos (telas visuais)
@@ -104,13 +125,17 @@ entra quando o resultado é visual.
 
 ## Próximos passos
 
-1. Registrar atividade — torna os status e tempos reais (destrava a gamificação).
-2. Agente designer — cara premium depois do núcleo pronto.
-3. Backend (Supabase) — login real, dados multi-aparelho; aí entram os revisores.
+1. Migrar notificações e reações para o Supabase (o lib/hook já existem;
+   falta ligar sininho/painel/Friends) — hoje o ciclo social só funciona
+   no mesmo navegador.
+2. Amizades reais (tabela friendships) no lugar dos personagens fictícios.
+3. Agente designer — cara premium depois do núcleo pronto.
+4. Revisores (code-reviewer e security-auditor) — o backend já existe.
 
 ## Pendências anotadas
 
 - Decisão de marca (DojoApp vs Oss Challenge vs outro) — resolver perto de
   compartilhar, com pesquisa de nome/domínio/loja livre.
+- Remover do código as telas do app-academia antigo (/teacher, /academy, /teacher-checklist) se o pivô for definitivo.
 - Limpar ferramentas extras do Node (Visual Studio Build Tools, Python) do
   computador do Felipe no fim do projeto.

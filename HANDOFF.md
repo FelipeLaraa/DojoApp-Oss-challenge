@@ -4,7 +4,7 @@
 > frontend, nada funciona"). Aquele retrato está DESATUALIZADO. Abaixo, o que
 > realmente funciona hoje, testado no navegador pelo Felipe.
 
-Data: outubro/2026. Leia junto com o CLAUDE.md.
+Data: 21/11/2026. Leia junto com o CLAUDE.md.
 
 ## Resumo em uma linha
 
@@ -12,78 +12,72 @@ O DojoApp pivotou para um hub social de atividade física (B2C, estilo
 Gym Rats + Strava). Várias funções JÁ salvam e funcionam de verdade — não é mais
 protótipo visual.
 
-## O que JÁ funciona (testado)
+## O que JÁ funciona (conferido no código)
 
-Salvamento real — este é o ponto que costuma ser mal entendido:
-- O perfil SALVA de verdade. Nome, @usuário, bio, modalidade, peso, altura,
-  faixa, moldura e foto são gravados e persistem ao recarregar a página.
-- A persistência é por perfil: cada personagem guarda suas próprias coisas na
-  chave localStorage `dojoProfile_<id>`. Trocar de perfil não apaga nada.
-- O botão "Salvar Alterações" NÃO é mais teatro. Ele chama `updateUser`, que
-  grava em `dojoUser` (sessão) e em `dojoProfile_<id>` (memória permanente).
+Backend Supabase (Auth, Postgres com RLS, Storage) — não é mais só localStorage:
+- Login/cadastro real por e-mail e senha (`AuthContext`). A entrada rápida com
+  personagens saiu do Login. Sessão persiste; multi-aparelho funciona pro que
+  está no banco.
+- Perfil SALVA no banco (tabela `profiles`): nome, @usuário, bio, modalidade,
+  peso, altura, faixa, moldura, próximo treino. Foto vai pro bucket
+  `profile-photos`. `updateUser` faz update real.
+- Molduras temáticas por esporte (Luta, Levantamento, Corrida, Natação) com
+  emblema SVG.
+- Registrar atividade (`/register`): modalidade, duração/distância, comentário,
+  humor, foto (comprimida, bucket `training-photos`, expira em 60 dias),
+  modal de confirmação. Grava em `activities`.
+- Dados reais derivados dos treinos (`useActivities`): sequência, tira da
+  semana, "treinou hoje", heatmap de 6 meses com 3 tons e DaySheet, histórico
+  mensal (`/history/:yyyyMM`), marcos de sequência.
+- Migração única de treinos antigos do localStorage pro banco no login.
+- PWA: manifest + service worker (`public/sw.js`).
+- Navegação: lateral no desktop, inferior no mobile (Home, Treinar, Ranking,
+  Amigos, Perfil).
 
-Foto de perfil:
-- "Trocar foto" lê uma imagem da galeria do aparelho e mostra dentro da moldura
-  escudo. Salva e persiste.
+Build: `npm run build` (usa `tools/generate-llms.js || true`, pasta que não
+existe no repo; o `|| true` segura). Rode sempre antes de commitar.
 
-Login:
-- Entrada rápida com 4 personagens fictícios (Felipe, Thiago, Nicole, Ciclano),
-  definidos em `src/data/characters.js`. Clicar entra como aquele personagem,
-  carregando o perfil salvo dele se já tiver sido editado.
+## O que é FIXO/local (ainda não é dado real)
 
-Hub social (o coração do app):
-- Home é um feed social (sem posts, sem curtidas): seu resumo + "Precisa de um
-  empurrão" (amigos inativos) + feed de atividade dos amigos.
-- 3 reações de 1 toque em cada card: Fogo, Força, Cutucar. Cada toque envia a
-  reação ao amigo.
-- Enviar reação/incentivo GRAVA uma notificação no perfil do amigo
-  (`dojoNotifications_<id>`). O ciclo é real entre perfis.
-- Sininho de notificações no topo da Home, com badge de não lidas. Abre painel,
-  marca como visto.
-- Quem recebe pode responder na hora: "Devolver fogo" e "Responder" (mensagem).
-  A resposta volta pro sininho de quem começou. Loop social fechado nos 2 sentidos.
-- Aba Amigos: feed + enviar incentivo (item + mensagem) + notificações recebidas.
-- Perfil público do atleta (`/athlete/:id`): clicar num amigo abre o perfil dele
-  (status, bio, estatísticas), somente leitura.
-
-Molduras temáticas por esporte: Luta, Levantamento, Corrida, Natação — cada uma
-com cor própria e um emblema (SVG) no canto. (São pequenas de propósito; o
-refino visual fica pro agente designer.)
-
-Navegação: lateral no desktop, inferior no mobile.
-
-Build: `npm run build` passa limpo. Rode sempre antes de commitar.
-
-## O que é FIXO/placeholder (ainda não é dado real)
-
-- Status de atividade dos personagens (50 km, 4 dias, Inativo) — fixos em
-  characters.js.
-- Tempos no feed ("há 3 h") — fixos.
-- Estatísticas numéricas do perfil (47 aulas, #12 ranking) — fixas.
-- Botão "Registrar" na Home — placeholder (mostra toast).
-- Barra de progresso de faixa — usa valores padrão.
-
-Tudo isso vira real quando a tela "Registrar atividade" existir.
+Amigos e social ainda são fictícios/locais — este é o próximo gargalo:
+- Amigos (feed, stories, ranking, `/athlete/:id`, MonthHistory de atleta) vêm
+  dos 4 personagens de `src/data/characters.js` (Felipe, Thiago, Nicole,
+  Ciclano) com ~180 dias de histórico sintético. Tabelas `friendships` e
+  `reactions` existem no schema, mas o app não as usa.
+- Reações (Fogo/Força/Cutucar), contadores e limite diário: localStorage
+  (`dojoReactionDeltas`, `dojoReactSent_<id>`).
+- Notificações: `NotificationBell`, `NotificationPanel` e `Friends.jsx` ainda
+  leem/gravam `dojoNotifications_<id>` e `dojoNotifSeen_<id>` no localStorage.
+  `lib/notifications.js` e o hook `useNotifications` (Supabase) já existem,
+  mas nenhuma tela os consome.
+- Stories vistos: localStorage.
+- Telas herdadas do app-academia (`TeacherHome`, `AcademyHome`,
+  `TeacherChecklist`) ainda têm rota; não fazem parte do produto atual.
+- Barra de progresso de faixa e estatísticas do perfil (aulas, ranking):
+  valores padrão.
 
 ## Arquitetura de dados (hoje)
 
-Sem backend. Tudo em localStorage:
-- `dojoUser` / `dojoUserType` — sessão atual.
-- `dojoProfile_<id>` — memória permanente de cada perfil (sobrevive a logout).
-- `dojoNotifications_<id>` — notificações recebidas por perfil.
-- `dojoNotifSeen_<id>` — timestamp do último visto (badge de não lidas).
-
-Limite conhecido: localStorage é por navegador/aparelho. Multi-aparelho e login
-real só com backend (Supabase), que é um passo futuro.
+- Supabase: `profiles`, `activities`, `notifications` (lib pronta, UI não
+  ligada), `friendships`, `reactions`, `story_views` (estas três só no schema).
+  Buckets `training-photos` e `profile-photos`. SQL em `supabase/schema.sql` e
+  `supabase/migrations/001..003` (rodar no SQL Editor, são idempotentes).
+- Env: `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` (ver `.env.example`).
+  Sem elas o app lança erro ao iniciar.
+- O cliente Supabase é importado via esm.sh (`src/lib/supabase.js`), não está
+  no `package.json`.
+- localStorage restante: notificações, reações, stories vistos, perfis dos
+  personagens (`dojoProfile_<id>`).
 
 ## Próximos passos
 
-### Curto prazo — enriquecer a Home (o Felipe pediu, 13/10/2026)
+### Curto prazo — enriquecer a Home (o Felipe pediu, 13/10/2026; A já feita, demais itens não conferidos um a um)
 
 A Home ganhou peças importantes (streak, tira de frequência, contador de
 reações com limite), mas ainda está simples. Sugestões, por impacto × esforço:
 
 A. REMOVER / SUBSTITUIR a "20/60 aulas · 33%" do resumo
+   (FEITO: o texto não existe mais em src/components/home nem WelcomeMessage)
    É resquício do app-academia antigo. Hoje confunde — "aulas" não faz sentido
    num hub genérico. Opções: substituir por "meta da semana" (ex: 4 treinos,
    1/4 ✓) OU remover até existir meta real.
@@ -130,13 +124,13 @@ J. Agente DESIGNER (contestador criativo, cara premium)
 
 ### Longo prazo
 
-K. Backend (Supabase) — destrava quase tudo que hoje é "demo"
-   - Login real multi-aparelho (hoje perde ao trocar de celular)
-   - Foto do treino (hoje é placeholder "em breve")
-   - Contador de reações compartilhado de verdade (hoje é local)
-   - Dados reais de amigos (hoje são fixos em characters.js)
-   - Entrada dos agentes code-reviewer e security-auditor
-   É um salto grande. Não é pra amanhã, mas é o próximo horizonte real.
+K. Backend (Supabase) — PARCIALMENTE FEITO
+   Já no banco: login real, perfil, treinos, foto de treino/perfil.
+   Falta (este é o próximo marco):
+   - Amigos reais via `friendships` (hoje fixos em characters.js)
+   - Notificações no Supabase (lib pronta, UI ainda em localStorage)
+   - Reações compartilhadas via `reactions` + limite diário no servidor
+   - Entrada dos agentes code-reviewer e security-auditor (já há senhas/dados)
 
 ## Rota pra virar app de celular (sem reescrever)
 
@@ -144,7 +138,7 @@ O app já foi construído mobile-first (viewport 375px, nav flutuante, touch
 targets grandes). O trabalho pesado já está feito. Rota recomendada, do
 mais fácil pro mais trabalhoso:
 
-1. **PWA** (grátis, 1-2h). Adicionar manifest + service worker. O usuário
+1. **PWA** (JÁ FEITO: manifest + `sw.js`; grátis, 1-2h). Adicionar manifest + service worker. O usuário
    abre o app no navegador do celular → "Adicionar à tela inicial" → vira
    ícone com splash, abre fullscreen sem barra do navegador, funciona
    offline. Zero loja, zero custo. Limite: notificação push limitada no
@@ -160,12 +154,13 @@ mais fácil pro mais trabalhoso:
    Capacitor não dão. Hoje não vale.
 
 O PWA é tão barato que vale fazer já que o Felipe quiser testar o app no
-próprio bolso. Alerta importante: o localStorage é por aparelho, então
-instalar o PWA no celular começa do zero (os dados do navegador do PC
-não migram). Isso só se resolve com o Backend (K acima).
+próprio bolso. Perfil e treinos agora vêm do Supabase e acompanham a conta em qualquer
+aparelho. Só o que ainda é localStorage (notificações, reações; K acima)
+começa do zero ao instalar em outro aparelho.
 
 ## Como continuar
 
 Leia o CLAUDE.md para o modo de trabalho. Rode o app com `npm run dev`. Antes de
 qualquer commit, `npm run build`. Commits pequenos. Não reconstrua o que já
-funciona — especialmente o salvamento, que está correto.
+funciona — especialmente o salvamento de perfil e treinos, que está correto.
+O app exige as env vars do Supabase para iniciar.

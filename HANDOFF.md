@@ -4,7 +4,7 @@
 > frontend, nada funciona"). Aquele retrato está DESATUALIZADO. Abaixo, o que
 > realmente funciona hoje, testado no navegador pelo Felipe.
 
-Data: outubro/2026. Leia junto com o CLAUDE.md.
+Data: 28/11/2026 (última revisão do código: 30/10/2026). Leia junto com o CLAUDE.md.
 
 ## Resumo em uma linha
 
@@ -12,131 +12,108 @@ O DojoApp pivotou para um hub social de atividade física (B2C, estilo
 Gym Rats + Strava). Várias funções JÁ salvam e funcionam de verdade — não é mais
 protótipo visual.
 
-## O que JÁ funciona (testado)
+## O que JÁ funciona
 
-Salvamento real — este é o ponto que costuma ser mal entendido:
-- O perfil SALVA de verdade. Nome, @usuário, bio, modalidade, peso, altura,
-  faixa, moldura e foto são gravados e persistem ao recarregar a página.
-- A persistência é por perfil: cada personagem guarda suas próprias coisas na
-  chave localStorage `dojoProfile_<id>`. Trocar de perfil não apaga nada.
-- O botão "Salvar Alterações" NÃO é mais teatro. Ele chama `updateUser`, que
-  grava em `dojoUser` (sessão) e em `dojoProfile_<id>` (memória permanente).
+Backend Supabase (desde 26/10/2026):
+- Login real por e-mail/senha (Entrar / Criar conta), sessão persistida.
+  A entrada rápida por personagem saiu do Login.
+- Perfil SALVA de verdade na tabela `profiles` (nome, @usuário, bio,
+  modalidade, peso, altura, faixa, moldura, emblema, próximo treino).
+  `updateUser` (AuthContext) faz update real e recarrega o perfil.
+- Foto de perfil vai pro bucket `profile-photos`.
+- Rotas protegidas: sem sessão, volta pro Login.
 
-Foto de perfil:
-- "Trocar foto" lê uma imagem da galeria do aparelho e mostra dentro da moldura
-  escudo. Salva e persiste.
+Registrar atividade (`/register`) — o marco combinado, FEITO:
+- Modalidade, duração, km (Corrida/Natação/Musculação), mood, comentário e
+  foto (câmera ou galeria, comprimida no cliente), com modal de confirmação.
+- Grava na tabela `activities` (RLS: só o dono escreve) e fotos no bucket
+  `training-photos`. Foto expira em 60 dias (migration 003); metadados ficam.
+- Migração one-shot dos treinos antigos do localStorage pro Supabase no login.
+- `useActivities` refaz a leitura ao registrar treino e ao voltar à aba.
 
-Login:
-- Entrada rápida com 4 personagens fictícios (Felipe, Thiago, Nicole, Ciclano),
-  definidos em `src/data/characters.js`. Clicar entra como aquele personagem,
-  carregando o perfil salvo dele se já tiver sido editado.
+O que agora é REAL por causa disso: sequência (streak), "treinou hoje",
+tira/stories da semana, estatísticas do perfil, heatmap anual (6 meses,
+3 tons, DaySheet), histórico mensal (`/history/:yyyyMM`), marco semanal no
+Registrar.
 
-Hub social (o coração do app):
-- Home é um feed social (sem posts, sem curtidas): seu resumo + "Precisa de um
-  empurrão" (amigos inativos) + feed de atividade dos amigos.
-- 3 reações de 1 toque em cada card: Fogo, Força, Cutucar. Cada toque envia a
-  reação ao amigo.
-- Enviar reação/incentivo GRAVA uma notificação no perfil do amigo
-  (`dojoNotifications_<id>`). O ciclo é real entre perfis.
-- Sininho de notificações no topo da Home, com badge de não lidas. Abre painel,
-  marca como visto.
-- Quem recebe pode responder na hora: "Devolver fogo" e "Responder" (mensagem).
-  A resposta volta pro sininho de quem começou. Loop social fechado nos 2 sentidos.
-- Aba Amigos: feed + enviar incentivo (item + mensagem) + notificações recebidas.
-- Perfil público do atleta (`/athlete/:id`): clicar num amigo abre o perfil dele
-  (status, bio, estatísticas), somente leitura.
+Hub social:
+- Home: sino, "Hoje", próximo treino, stories da semana (tocar abre foto em
+  tela cheia), feed dos amigos, mini-ranking, card de marco.
+- Reações de 1 toque (Fogo/Força/Cutucar) com limite diário por amigo.
+- Amigos: "Incentivar amigos" compacto (Precisa de um empurrão / Em alta,
+  mensagens prontas, envio com desfazer), ranking de amigos, notificações.
+- Ranking com toggle de período e score por mês.
+- Perfil público (`/athlete/:id`): hero, heatmap de 6 meses, somente leitura.
+- Escudo (moldura + emblema) por esporte: Luta, Levantamento, Corrida, Natação.
 
-Molduras temáticas por esporte: Luta, Levantamento, Corrida, Natação — cada uma
-com cor própria e um emblema (SVG) no canto. (São pequenas de propósito; o
-refino visual fica pro agente designer.)
+PWA: manifest + service worker (`dojo-v2`), instalável no celular.
 
 Navegação: lateral no desktop, inferior no mobile.
 
-Build: `npm run build` passa limpo. Rode sempre antes de commitar.
+Build: `npm run build` (script chama `tools/generate-llms.js || true`; a pasta
+`tools/` não existe, o `|| true` esconde isso). Rode antes de commitar.
 
-## O que é FIXO/placeholder (ainda não é dado real)
+## O que ainda é FIXO / localStorage / placeholder
 
-- Status de atividade dos personagens (50 km, 4 dias, Inativo) — fixos em
-  characters.js.
-- Tempos no feed ("há 3 h") — fixos.
-- Estatísticas numéricas do perfil (47 aulas, #12 ranking) — fixas.
-- Botão "Registrar" na Home — placeholder (mostra toast).
-- Barra de progresso de faixa — usa valores padrão.
-
-Tudo isso vira real quando a tela "Registrar atividade" existir.
+- AMIGOS são os 4 personagens de `src/data/characters.js` (dados e ~180 dias
+  de histórico sintéticos). Não existe friendship real; a tabela `friendships`
+  está no schema mas sem uso na UI.
+- Incentivos enviados na aba Amigos e respostas no painel GRAVAM em
+  localStorage (`dojoNotifications_<id>`) — só aparecem no mesmo navegador.
+- O sino (`NotificationBell`) lê localStorage. `src/lib/notifications.js`
+  (Supabase) e `useNotifications` existem, mas nenhuma tela os usa ainda.
+- Contador e limite diário de reações: localStorage (`reactions.js`).
+  Tabela `reactions` do schema sem uso.
+- Stories vistos: localStorage. Tabela `story_views` sem uso.
+- Aba "Pro · competidor" no perfil público: teaser "em breve".
+- Telas legadas de academia (`/teacher`, `/academy`, `/teacher-checklist`):
+  ainda roteadas, fora do foco atual.
 
 ## Arquitetura de dados (hoje)
 
-Sem backend. Tudo em localStorage:
-- `dojoUser` / `dojoUserType` — sessão atual.
-- `dojoProfile_<id>` — memória permanente de cada perfil (sobrevive a logout).
-- `dojoNotifications_<id>` — notificações recebidas por perfil.
-- `dojoNotifSeen_<id>` — timestamp do último visto (badge de não lidas).
+Supabase (SDK via esm.sh, env em `.env` — ver `.env.example`):
+- Tabelas em uso: `profiles`, `activities`.
+- Tabelas no schema SEM uso na UI: `friendships`, `reactions`, `notifications`
+  (só a lib), `story_views`.
+- Buckets: `training-photos`, `profile-photos`.
+- SQL: `supabase/schema.sql` + `supabase/migrations/001..003` (rodar no SQL
+  Editor; idempotentes).
 
-Limite conhecido: localStorage é por navegador/aparelho. Multi-aparelho e login
-real só com backend (Supabase), que é um passo futuro.
+localStorage (resto): `dojoNotifications_<id>`, `dojoNotifSeen_<id>`,
+`dojoReactionDeltas`, `dojoReactSent_<id>`, stories vistos, e
+`dojoProfile_<id>` (só lido pra personagens fictícios).
 
 ## Próximos passos
 
-### Curto prazo — enriquecer a Home (o Felipe pediu, 13/10/2026)
+### Curto prazo
 
-A Home ganhou peças importantes (streak, tira de frequência, contador de
-reações com limite), mas ainda está simples. Sugestões, por impacto × esforço:
+1. Amigos reais: usar `friendships`, trocar os personagens fictícios (dar
+   convite/adicionar por @usuário). Destrava feed, ranking e perfil público
+   com dados de verdade.
+2. Notificações e reações no Supabase: ligar sino e Friends a
+   `notifications.js`/`useNotifications`; mover contador e limite diário de
+   reações pra tabela `reactions`.
+3. Revisores: criar code-reviewer e security-auditor (já há senha, RLS e
+   storage).
 
-A. REMOVER / SUBSTITUIR a "20/60 aulas · 33%" do resumo
-   É resquício do app-academia antigo. Hoje confunde — "aulas" não faz sentido
-   num hub genérico. Opções: substituir por "meta da semana" (ex: 4 treinos,
-   1/4 ✓) OU remover até existir meta real.
+### Do plano de enriquecer a Home (13/10/2026) — status
 
-B. "Treinou hoje?" em destaque no resumo
-   Antes do treino de hoje: botão grande "Treinei hoje" direto no resumo.
-   Depois do treino: "✓ Treino de hoje · há Xh · Natação" como memória.
-   Pequeno, muda MUITO a sensação de uso diário.
-
-C. Selo "✓ hoje" nos amigos que treinaram no dia
-   Prova social forte. Olhar na Home e ver quem já se mexeu puxa a sua vez.
-
-D. Marcos de sequência celebrados
-   7 / 14 / 30 / 100 dias ganham badge visual (brilho, confete, cor especial)
-   em vez de só mudar o número do hit. Hoje 1 e 42 têm "o mesmo peso visual".
-
-E. "Último treino" no resumo
-   Linha curta: "último: há 2h · Natação · 45 min". Transforma o registro em
-   memória viva, não só número que subiu.
-
-F. Hierarquia no feed
-   Quem bateu marco hoje aparece no topo com destaque. Quem está em alta
-   (streak subindo) ganha ênfase. Hoje tudo tem o mesmo peso.
-
-G. Perfil público do atleta (/athlete/:id) ganha a tira de frequência
-   Já aparece na Home e Ranking. Falta esse último lugar.
+Já feito: A ("aulas 20/60" removido da Home), streak, tira/stories da semana, "Hoje", marco de sequência
+(card), mini-ranking, heatmap, perfil público com histórico (G).
+Ainda abertos: D (celebração visual por marco 7/14/30/100), F (hierarquia no feed),
+H (metas semanais/mensais).
 
 ### Médio prazo
 
-H. Sistema de metas semanais/mensais
-   "Sua meta: 4 treinos esta semana · 1/4 ✓". Alimenta uma barra de
-   progressão REAL (substitui a de "aulas" chumbada). Combustível do motor
-   Duolingo.
-
-I. Ideia guardada: moldura reage à ausência
-   Moldura esfria/apaga quando o usuário fica tempo sem treinar e esquenta ao
-   voltar. Liga visualmente com o streak. Conversamos sobre isso em 13/10;
-   encaixa depois do loop registro+streak estar bem assentado.
-
-J. Agente DESIGNER (contestador criativo, cara premium)
-   Já previsto no CLAUDE.md. Com a Home esticada, é a hora dele passar o olho
-   crítico (cores, tipografia, hierarquia visual, conceito). Mandato de
-   discordar; não é "fazer bonito", é desafiar escolhas.
+- Moldura reage à ausência (esfria sem treinar, esquenta ao voltar).
+- Agente DESIGNER (contestador criativo, cara premium) — já previsto no
+  CLAUDE.md.
+- Agendar `delete_expired_photos()` (pg_cron) se ainda não estiver ativo.
 
 ### Longo prazo
 
-K. Backend (Supabase) — destrava quase tudo que hoje é "demo"
-   - Login real multi-aparelho (hoje perde ao trocar de celular)
-   - Foto do treino (hoje é placeholder "em breve")
-   - Contador de reações compartilhado de verdade (hoje é local)
-   - Dados reais de amigos (hoje são fixos em characters.js)
-   - Entrada dos agentes code-reviewer e security-auditor
-   É um salto grande. Não é pra amanhã, mas é o próximo horizonte real.
+- Check-in em academias (estilo Wellhub), depois do social sólido.
+- Capacitor/loja quando o backend estiver estável (ver rota abaixo).
 
 ## Rota pra virar app de celular (sem reescrever)
 
@@ -159,10 +136,9 @@ mais fácil pro mais trabalhoso:
    enquanto não tiver milhares de usuários pedindo performance que PWA/
    Capacitor não dão. Hoje não vale.
 
-O PWA é tão barato que vale fazer já que o Felipe quiser testar o app no
-próprio bolso. Alerta importante: o localStorage é por aparelho, então
-instalar o PWA no celular começa do zero (os dados do navegador do PC
-não migram). Isso só se resolve com o Backend (K acima).
+O PWA JÁ está feito (manifest + service worker `dojo-v2`). Com o Supabase, os
+dados de perfil e treinos acompanham a conta entre aparelhos; o que ainda
+é localStorage (notificações, reações) continua por aparelho.
 
 ## Como continuar
 

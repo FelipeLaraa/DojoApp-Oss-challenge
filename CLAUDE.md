@@ -30,25 +30,40 @@ A Nicole (plugin) traz o julgamento geral. Aqui fica só o específico do Dojo:
 
 Base gerada por vibe coding (Hostinger Horizons), reconstruída peça a peça.
 Stack: React 18 + Vite 4, Tailwind, react-router, framer-motion, lucide-react.
-Persistência: localStorage, com MEMÓRIA POR PERFIL (chave dojoProfile_<id>).
-NÃO existe ainda: backend, banco de dados, autenticação real.
+Backend: Supabase (auth e-mail/senha, Postgres com RLS, Storage). SDK importado
+via esm.sh em src/lib/supabase.js (não está no package.json). Env em `.env`
+(modelo em `.env.example`). SQL em supabase/schema.sql + supabase/migrations/.
+PWA instalável (public/manifest.webmanifest + sw.js, cache `dojo-v2`).
+
+Real (Supabase): login/cadastro, perfil (tabela profiles + bucket profile-photos),
+treinos (tabela activities + bucket training-photos, foto expira em 60 dias).
+AINDA localStorage/fixo: amigos (personagens de src/data/characters.js, sem
+friendships reais), incentivos/reações enviados, sino de notificações, limite
+diário de reações, stories vistos.
 
 Telas funcionando:
-- Login: entrada rápida com 4 personagens fictícios (Felipe, Thiago, Nicole,
-  Ciclano) em src/data/characters.js. Cada um tem faixa, moldura, modalidade,
-  bio e status de atividade.
-- Perfil: foto da galeria, @usuário, biografia (150 chars), modalidade principal,
-  molduras temáticas por esporte (Luta/Levantamento/Corrida/Natação) com emblema.
-  Ordem: foto, informações/bio, molduras, progresso, estatísticas, salvar.
-- Amigos: feed dos amigos com status, enviar incentivo (item + mensagem), perfil
-  público do atleta (/athlete/:id), notificações recebidas.
-- Home (feed social): seu resumo + botão Registrar (placeholder), "Precisa de um
-  empurrão" (inativos), feed de atividade dos amigos. 3 reações de 1 toque
-  (Fogo/Força/Cutucar). Sininho de notificações com badge + responder/devolver.
-- Navegação: lateral no desktop, inferior no mobile. Aba Amigos incluída.
+- Login: e-mail/senha real (Entrar / Criar conta). Entrada rápida por
+  personagem foi removida; os 4 personagens (Felipe, Thiago, Nicole, Ciclano)
+  seguem como amigos fictícios no feed, ranking e /athlete/:id.
+- Home (/student): sino de notificações, atalho de navegação, "Hoje"
+  (TodaySection), próximo treino, stories da semana, feed dos amigos,
+  mini-ranking, card de marco de sequência. Reações Fogo/Força/Cutucar.
+- Registrar atividade (/register): modalidade, duração, km, mood, comentário,
+  foto (câmera/galeria, comprimida), modal de confirmação, sequência e marco
+  semanal. Grava em activities e alimenta streak, heatmap e estatísticas.
+- Perfil: visão/edição separadas, foto, bio, modalidade, escudo (moldura +
+  emblema), estatísticas reais, YearHeatmap (6 meses, 3 tons, DaySheet),
+  histórico mensal (/history/:yyyyMM).
+- Amigos: "Incentivar amigos" (Precisa de um empurrão / Em alta, mensagens
+  prontas, envio com desfazer), ranking de amigos, notificações.
+- Ranking: toggle de período, score por mês.
+- Perfil público (/athlete/:id): hero, heatmap de 6 meses, somente leitura.
+- Navegação: lateral no desktop, inferior no mobile.
+- Rotas legadas de academia (/teacher, /academy, /teacher-checklist) ainda
+  existem no código, sem uso no foco B2C atual.
 
-Dados fixos que viram reais quando houver "Registrar atividade": status
-(50 km, 4 dias, etc.), tempos ("há 3 h"), estatísticas do perfil.
+Dados ainda fixos: status e histórico dos personagens (mock sintético em
+characters.js); aba Pro "em breve" no perfil público.
 
 ## Modo de trabalho (combinado com o Felipe)
 
@@ -87,8 +102,8 @@ como escritas.
   pra direção de vídeo curto.
 - Alex PM (.claude/agents/alex-pm.md): PM sênior. Opportunity Assessment
   formal pra decisões de produto, veredito Build / Explore / Defer / Kill.
-- A criar quando entrar backend: code-reviewer e security-auditor (ver repo
-  addyosmani/agent-skills). O security vira obrigatório com dados/senhas.
+- A criar (backend já entrou): code-reviewer e security-auditor (ver repo
+  addyosmani/agent-skills). O security é obrigatório: há senhas e dados reais.
 
 ## Fluxo Nicole 2 passos (telas visuais)
 
@@ -104,9 +119,12 @@ entra quando o resultado é visual.
 
 ## Próximos passos
 
-1. Registrar atividade — torna os status e tempos reais (destrava a gamificação).
-2. Agente designer — cara premium depois do núcleo pronto.
-3. Backend (Supabase) — login real, dados multi-aparelho; aí entram os revisores.
+1. Amigos reais (tabela friendships) — troca os personagens fictícios.
+2. Ligar notificações/reações ao Supabase na UI (lib e hook já existem:
+   src/lib/notifications.js, src/hooks/useNotifications.js; sino e Friends
+   ainda leem localStorage).
+3. Agente designer — cara premium depois do núcleo pronto.
+4. Revisores (code-reviewer e security-auditor) — já há auth e dados reais.
 
 ## Pendências anotadas
 
